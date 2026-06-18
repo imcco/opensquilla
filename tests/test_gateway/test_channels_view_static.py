@@ -1,6 +1,53 @@
 from pathlib import Path
 
+CHANNELS_JS = Path("src/opensquilla/gateway/static/js/views/channels.js")
 CHANNELS_CSS = Path("src/opensquilla/gateway/static/css/views/channels.css")
+
+
+def test_channels_shell_stats_and_empty_state_use_i18n() -> None:
+    source = CHANNELS_JS.read_text(encoding="utf-8")
+
+    required = [
+        "I18n.t('channels.eyebrow')",
+        "I18n.t('channels.title')",
+        "I18n.t('channels.subtitle')",
+        "I18n.t('channels.actions.refresh')",
+        "I18n.t('channels.list.title')",
+        "I18n.t('channels.list.titleCount'",
+        "I18n.t('channels.stats.total')",
+        "I18n.t('channels.stats.connected')",
+        "I18n.t('channels.stats.inactive')",
+        "I18n.t('channels.stats.restartAttempts')",
+        "I18n.t('channels.empty.noneTitle')",
+        "I18n.t('channels.empty.noneBody')",
+        "I18n.t('channels.empty.guidedSetup')",
+    ]
+
+    for snippet in required:
+        assert snippet in source
+
+
+def test_channels_card_labels_status_hints_and_errors_use_i18n() -> None:
+    source = CHANNELS_JS.read_text(encoding="utf-8")
+
+    required = [
+        "I18n.t('channels.meta.connected')",
+        "I18n.t('channels.meta.restartAttempts')",
+        "I18n.t('channels.config.title')",
+        "I18n.t('channels.status.connected')",
+        "I18n.t('channels.status.dead')",
+        "I18n.t('channels.status.unknown')",
+        "I18n.t('channels.hints.disabled'",
+        "I18n.t('channels.hints.dead'",
+        "I18n.t('channels.hints.running')",
+        "I18n.t('channels.hints.restarting')",
+        "I18n.t('channels.hints.exhausted'",
+        "I18n.t('channels.hints.inactive')",
+        "I18n.t('channels.errors.loadFailed'",
+    ]
+
+    for snippet in required:
+        assert snippet in source
 
 
 def test_channels_config_summary_keeps_touch_friendly_hit_area() -> None:

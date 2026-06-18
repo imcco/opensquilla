@@ -156,6 +156,34 @@ def test_skills_locale_files_define_matching_complete_domain() -> None:
         ), key
 
 
+def test_channels_locale_files_define_matching_complete_domain() -> None:
+    en_entries = _locale_entries(_read(LOCALE_EN), "channels.")
+    zh_entries = _locale_entries(_read(LOCALE_ZH_CN), "channels.")
+    required = {
+        "channels.title",
+        "channels.subtitle",
+        "channels.actions.refresh",
+        "channels.stats.total",
+        "channels.stats.connected",
+        "channels.stats.inactive",
+        "channels.stats.restartAttempts",
+        "channels.list.title",
+        "channels.empty.noneTitle",
+        "channels.empty.guidedSetup",
+        "channels.meta.connected",
+        "channels.config.title",
+        "channels.hints.dead",
+        "channels.errors.loadFailed",
+    }
+
+    assert required <= set(en_entries)
+    assert set(en_entries) == set(zh_entries)
+    for key, en_value in en_entries.items():
+        assert set(re.findall(r"\{([A-Za-z0-9_]+)\}", en_value)) == set(
+            re.findall(r"\{([A-Za-z0-9_]+)\}", zh_entries[key])
+        ), key
+
+
 def test_logs_locale_files_cover_status_stats_and_empty_states() -> None:
     en = _read(LOCALE_EN)
     zh = _read(LOCALE_ZH_CN)

@@ -28,13 +28,13 @@ const ChannelsView = (() => {
       <div class="ch-stage">
         <header class="ch-stage__header">
           <div class="ch-stage__title-block">
-            <span class="ch-stage__eyebrow">Control · Channels</span>
-            <h2 class="ch-stage__title">Channels</h2>
-            <p class="ch-stage__subtitle">Runtime status for configured channels. Use guided setup or CLI to add and change channel configuration.</p>
+            <span class="ch-stage__eyebrow">${I18n.t('channels.eyebrow')}</span>
+            <h2 class="ch-stage__title">${I18n.t('channels.title')}</h2>
+            <p class="ch-stage__subtitle">${I18n.t('channels.subtitle')}</p>
           </div>
           <div class="ch-stage__actions">
-            <button class="btn btn--ghost" id="ch-refresh" title="Refresh">
-              ${icons.refresh()}<span>Refresh</span>
+            <button class="btn btn--ghost" id="ch-refresh" title="${_esc(I18n.t('channels.actions.refresh'))}">
+              ${icons.refresh()}<span>${I18n.t('channels.actions.refresh')}</span>
             </button>
           </div>
         </header>
@@ -43,7 +43,7 @@ const ChannelsView = (() => {
 
         <section class="ch-list">
           <div class="ch-list__head">
-            <h3 class="ch-list__title" id="ch-list-title">Configured channels</h3>
+            <h3 class="ch-list__title" id="ch-list-title">${I18n.t('channels.list.title')}</h3>
           </div>
           <div id="ch-cards" class="ch-cards"></div>
         </section>
@@ -92,7 +92,9 @@ const ChannelsView = (() => {
 
       _renderStats();
       _renderCards();
-    }).catch(err => UI.toast('Failed to load channels: ' + err.message, 'err'));
+    }).catch(err => UI.toast(I18n.t('channels.errors.loadFailed', {
+      error: err?.message || I18n.t('common.unknownError'),
+    }), 'err'));
   }
 
   function _renderStats() {
@@ -109,26 +111,26 @@ const ChannelsView = (() => {
 
     wrap.innerHTML = `
       <div class="stat stat--hero">
-        <div class="stat-label">Total channels</div>
+        <div class="stat-label">${I18n.t('channels.stats.total')}</div>
         <div class="stat-value">${total}</div>
-        <div class="stat-hint">${types.size} type${types.size === 1 ? '' : 's'}</div>
+        <div class="stat-hint">${_typeCountHint(types.size)}</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Connected</div>
+        <div class="stat-label">${I18n.t('channels.stats.connected')}</div>
         <div class="stat-value">
           ${connected}${connected ? '<span class="dot ok"></span>' : ''}
         </div>
-        <div class="stat-hint">${connected ? 'live' : (attention ? `${attention} unhealthy` : 'all idle')}</div>
+        <div class="stat-hint">${_connectedHint(connected, attention)}</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Inactive</div>
+        <div class="stat-label">${I18n.t('channels.stats.inactive')}</div>
         <div class="stat-value">${inactive}</div>
-        <div class="stat-hint">${attention ? `<span class="ch-neg">${attention} need attention</span>` : _inactiveHint(inactive, disabled)}</div>
+        <div class="stat-hint">${attention ? `<span class="ch-neg">${I18n.t('channels.stats.attentionNeeded', { count: attention })}</span>` : _inactiveHint(inactive, disabled)}</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Restart attempts</div>
+        <div class="stat-label">${I18n.t('channels.stats.restartAttempts')}</div>
         <div class="stat-value mono">${restarts}</div>
-        <div class="stat-hint">since gateway start</div>
+        <div class="stat-hint">${I18n.t('channels.stats.restartSinceStart')}</div>
       </div>`;
   }
 
@@ -138,8 +140,8 @@ const ChannelsView = (() => {
     if (!container) return;
     if (titleEl) {
       titleEl.innerHTML = _channels.length
-        ? `Configured channels <span class="ch-list__count">${_channels.length}</span>`
-        : 'Configured channels';
+        ? I18n.t('channels.list.titleCount', { count: _channels.length })
+        : I18n.t('channels.list.title');
     }
 
     if (_channels.length === 0) {
@@ -169,10 +171,10 @@ const ChannelsView = (() => {
             </g>
           </svg>
         </div>
-        <div class="ch-empty__title">No configured channels.</div>
-        <p class="ch-empty__msg">Channel provisioning stays in guided setup and the CLI so credentials, dependency extras, webhook URLs, and restart requirements stay explicit.</p>
+        <div class="ch-empty__title">${I18n.t('channels.empty.noneTitle')}</div>
+        <p class="ch-empty__msg">${I18n.t('channels.empty.noneBody')}</p>
         <div class="ch-empty__actions">
-          <button class="btn btn--primary" id="ch-guided-setup" type="button">${icons.config()}<span>Guided setup</span></button>
+          <button class="btn btn--primary" id="ch-guided-setup" type="button">${icons.config()}<span>${I18n.t('channels.empty.guidedSetup')}</span></button>
         </div>
         <code class="ch-empty__code">opensquilla onboard configure channels</code>
         <code class="ch-empty__code">opensquilla channels list</code>
@@ -182,7 +184,7 @@ const ChannelsView = (() => {
     }
 
     container.innerHTML = _channels.map((ch, i) => {
-      const name = ch.name || ch.id || 'Unknown';
+      const name = ch.name || ch.id || I18n.t('channels.meta.unknownName');
       const status = ch.status || (ch.connected ? 'connected' : 'stopped');
       const isRunning = status === 'running' || status === 'connected';
       const isDead = status === 'dead';
@@ -205,14 +207,14 @@ const ChannelsView = (() => {
           <span class="chip mono">${_esc(ch.type || 'unknown')}</span>
         </header>
         <div class="ch-card__status">
-          <span class="chip ${chipCls}">${_esc(status)}</span>
+          <span class="chip ${chipCls}">${_esc(_statusLabel(status))}</span>
         </div>
         <dl class="ch-card__meta">
-          <div><dt>Connected</dt><dd class="ch-mono">${_esc(since)}</dd></div>
-          <div><dt>Restart attempts</dt><dd class="ch-mono">${_esc(attempts)}</dd></div>
+          <div><dt>${I18n.t('channels.meta.connected')}</dt><dd class="ch-mono">${_esc(since)}</dd></div>
+          <div><dt>${I18n.t('channels.meta.restartAttempts')}</dt><dd class="ch-mono">${_esc(attempts)}</dd></div>
         </dl>
         <details class="ch-card__config">
-          <summary>Adapter config</summary>
+          <summary>${I18n.t('channels.config.title')}</summary>
           <pre class="ch-card__config-pre">${_esc(configJson)}</pre>
         </details>
         <footer class="ch-card__footnote">
@@ -224,22 +226,54 @@ const ChannelsView = (() => {
 
   function _statusHint({ status, isRunning, isDead, enabled, name }) {
     const safeName = name || '<name>';
-    if (!enabled) return `Disabled in config — gateway restart required after re-enabling. Run \`opensquilla onboard configure channels\` to change.`;
-    if (isDead) return `Adapter is dead. Inspect gateway logs, then \`opensquilla channels restart ${safeName}\`.`;
-    if (isRunning) return 'Adapter is live in the current gateway process.';
-    if (status === 'restarting') return 'Adapter is restarting after dispatch errors.';
-    if (status === 'exhausted') return `Adapter exhausted its retry budget. Try \`opensquilla channels restart ${safeName}\`.`;
-    return 'Configured on disk but not active in this gateway process — restart the gateway to load it.';
+    if (!enabled) return I18n.t('channels.hints.disabled');
+    if (isDead) return I18n.t('channels.hints.dead', { name: safeName });
+    if (isRunning) return I18n.t('channels.hints.running');
+    if (status === 'restarting') return I18n.t('channels.hints.restarting');
+    if (status === 'exhausted') return I18n.t('channels.hints.exhausted', { name: safeName });
+    return I18n.t('channels.hints.inactive');
   }
 
   function _needsAttention(status) {
     return status === 'dead' || status === 'restarting' || status === 'exhausted';
   }
 
+  function _connectedHint(connected, attention) {
+    if (connected) return I18n.t('channels.stats.connectedLive');
+    if (attention) return I18n.t('channels.stats.connectedUnhealthy', { count: attention });
+    return I18n.t('channels.stats.connectedIdle');
+  }
+
   function _inactiveHint(inactive, disabled) {
-    if (!inactive) return 'no inactive channels';
-    if (disabled) return `${disabled} disabled`;
-    return 'configured but idle';
+    if (!inactive) return I18n.t('channels.stats.inactiveNone');
+    if (disabled) return I18n.t('channels.stats.inactiveDisabled', { count: disabled });
+    return I18n.t('channels.stats.inactiveIdle');
+  }
+
+  function _typeCountHint(count) {
+    if (count === 1) return I18n.t('channels.stats.typeSingle');
+    return I18n.t('channels.stats.typePlural', { count });
+  }
+
+  function _statusLabel(status) {
+    switch (status) {
+      case 'running':
+        return I18n.t('channels.status.running');
+      case 'connected':
+        return I18n.t('channels.status.connected');
+      case 'restarting':
+        return I18n.t('channels.status.restarting');
+      case 'exhausted':
+        return I18n.t('channels.status.exhausted');
+      case 'dead':
+        return I18n.t('channels.status.dead');
+      case 'stopped':
+        return I18n.t('channels.status.stopped');
+      case 'disabled':
+        return I18n.t('channels.status.disabled');
+      default:
+        return I18n.t('channels.status.unknown');
+    }
   }
 
   function _esc(s) {

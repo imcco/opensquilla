@@ -34,7 +34,7 @@ def test_channels_view_points_configuration_to_cli_onboarding():
 def test_channels_stats_do_not_report_attention_states_as_healthy():
     txt = (VIEWS / "channels.js").read_text(encoding="utf-8")
     assert "all healthy" not in txt
-    assert "need attention" in txt
+    assert "I18n.t('channels.stats.attentionNeeded'" in txt
     assert "restarting" in txt
     assert "exhausted" in txt
 
