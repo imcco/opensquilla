@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 ROOT = Path("src/opensquilla/gateway")
@@ -16,6 +17,14 @@ COMPONENTS_CSS = ROOT / "static/css/components.css"
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def _locale_entries(source: str, prefix: str) -> dict[str, str]:
+    return dict(re.findall(rf"'({re.escape(prefix)}[^']+)':\s*'((?:\\'|[^'])*)'", source))
+
+
+def _locale_keys(source: str, prefix: str) -> set[str]:
+    return set(_locale_entries(source, prefix))
 
 
 def test_i18n_assets_load_before_views_and_app() -> None:
@@ -67,6 +76,32 @@ def test_locale_files_define_matching_core_keys() -> None:
     for key in required_keys:
         assert f"'{key}':" in en
         assert f"'{key}':" in zh
+
+
+def test_chat_locale_files_define_matching_complete_domain() -> None:
+    en_entries = _locale_entries(_read(LOCALE_EN), "chat.")
+    zh_entries = _locale_entries(_read(LOCALE_ZH_CN), "chat.")
+    required = {
+        "chat.empty.noMessages",
+        "chat.composer.placeholder",
+        "chat.actions.send",
+        "chat.actions.stop",
+        "chat.actions.newSession",
+        "chat.actions.copyMessage",
+        "chat.sessions.loading",
+        "chat.sessions.noMatches",
+        "chat.status.idle",
+        "chat.permissions.prompts",
+        "chat.errors.copyFailed",
+        "chat.errors.subscriptionFailed",
+    }
+
+    assert required <= set(en_entries)
+    assert set(en_entries) == set(zh_entries)
+    for key, en_value in en_entries.items():
+        assert set(re.findall(r"\{([A-Za-z0-9_]+)\}", en_value)) == set(
+            re.findall(r"\{([A-Za-z0-9_]+)\}", zh_entries[key])
+        ), key
 
 
 def test_logs_locale_files_cover_status_stats_and_empty_states() -> None:

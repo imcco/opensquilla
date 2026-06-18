@@ -8,6 +8,23 @@ SAVINGS_FX_JS = Path("src/opensquilla/gateway/static/js/components/savings-fx.js
 TASK_RUNTIME_PY = Path("src/opensquilla/gateway/task_runtime.py")
 
 
+def test_chat_user_facing_shell_uses_i18n() -> None:
+    source = CHAT_JS.read_text(encoding="utf-8")
+    required_calls = [
+        "I18n.t('chat.empty.noMessages')",
+        "I18n.t('chat.composer.placeholder')",
+        "I18n.t('chat.actions.send')",
+        "I18n.t('chat.actions.stop')",
+        "I18n.t('chat.actions.newSession')",
+        "I18n.t('chat.actions.copyMessage')",
+        "I18n.t('chat.sessions.loading')",
+        "I18n.t('chat.status.idle')",
+    ]
+
+    for call in required_calls:
+        assert call in source
+
+
 def test_global_topbar_does_not_render_duplicate_chat_title() -> None:
     source = APP_JS.read_text(encoding="utf-8")
     topbar_start = source.index('<header class="topbar"')

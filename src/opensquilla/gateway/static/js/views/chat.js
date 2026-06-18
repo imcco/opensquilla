@@ -659,9 +659,9 @@ const ChatView = (() => {
   }
 
   function _displayRoleLabel(role) {
-    return role === 'user' ? 'You'
+    return role === 'user' ? I18n.t('chat.roles.you')
       : role === 'assistant' ? 'Squilla'
-      : role === 'subagent' ? 'Sub-agent'
+      : role === 'subagent' ? I18n.t('chat.roles.subagent')
       : role ? role.charAt(0).toUpperCase() + role.slice(1)
       : '';
   }
@@ -694,7 +694,7 @@ const ChatView = (() => {
   // Empty state — a single muted line, no interactive elements. The textarea
   // below is the entry point; the empty thread shouldn't compete with it.
   function _emptyStateHTML() {
-    return '<div class="chat-empty">No messages yet.</div>';
+    return `<div class="chat-empty">${_esc(I18n.t('chat.empty.noMessages'))}</div>`;
   }
 
   /* ── Per-bubble hover action row (Copy / Regenerate / Edit) ───────── */
@@ -742,19 +742,22 @@ const ChatView = (() => {
     const row = document.createElement('div');
     row.className = 'msg-actions';
     row.setAttribute('role', 'toolbar');
-    row.setAttribute('aria-label', role === 'user' ? 'User message actions' : 'Squilla message actions');
+    row.setAttribute('aria-label', I18n.t(
+      role === 'user' ? 'chat.aria.userMessageActions' : 'chat.aria.assistantMessageActions'
+    ));
+    const copyMessage = _escAttr(I18n.t('chat.actions.copyMessage'));
 
     if (role === 'assistant') {
       row.innerHTML =
-        '<button type="button" class="msg-action" data-action="copy" title="Copy message" aria-label="Copy message">'
+        `<button type="button" class="msg-action" data-action="copy" title="${copyMessage}" aria-label="${copyMessage}">`
         + _iconCopySmall() + '</button>'
-        + '<button type="button" class="msg-action" data-action="regenerate" title="Regenerate" aria-label="Regenerate response">'
+        + `<button type="button" class="msg-action" data-action="regenerate" title="${_escAttr(I18n.t('chat.actions.regenerate'))}" aria-label="${_escAttr(I18n.t('chat.actions.regenerate'))}">`
         + _iconRefreshSmall() + '</button>';
     } else {
       row.innerHTML =
-        '<button type="button" class="msg-action" data-action="copy" title="Copy message" aria-label="Copy message">'
+        `<button type="button" class="msg-action" data-action="copy" title="${copyMessage}" aria-label="${copyMessage}">`
         + _iconCopySmall() + '</button>'
-        + '<button type="button" class="msg-action" data-action="edit" title="Edit message" aria-label="Edit message">'
+        + `<button type="button" class="msg-action" data-action="edit" title="${_escAttr(I18n.t('chat.actions.editMessage'))}" aria-label="${_escAttr(I18n.t('chat.actions.editMessage'))}">`
         + _iconEditSmall() + '</button>';
     }
     body.appendChild(row);
@@ -1199,15 +1202,15 @@ const ChatView = (() => {
     const topbarCenter = App.getTopbarCenter && App.getTopbarCenter();
     if (topbarCenter) {
       topbarCenter.innerHTML = `
-        <label class="chat-label">Chat session</label>
+        <label class="chat-label">${_esc(I18n.t('chat.sessions.label'))}</label>
         <button type="button" class="chat-session-chip" id="chat-session-chip"
-                aria-label="Switch chat session" aria-haspopup="dialog" aria-expanded="false">
+                aria-label="${_escAttr(I18n.t('chat.aria.switchSession'))}" aria-haspopup="dialog" aria-expanded="false">
           <span class="chat-session-chip-key" id="chat-session-chip-key" title="${_esc(_sessionKey)}">${_esc(_sessionKey)}</span>
           <span class="chat-session-chip-caret" aria-hidden="true">${_iconChevronDown()}</span>
         </button>
-        <button class="chat-session-copy-btn" id="chat-session-copy" title="Copy session key" aria-label="Copy session key">${icons.copy()}</button>
-        <span class="chip" id="chat-run-status" title="Idle">Idle</span>
-        <span class="chat-ctx-warn hidden" id="chat-ctx-warn">Request ctx</span>`;
+        <button class="chat-session-copy-btn" id="chat-session-copy" title="${_escAttr(I18n.t('chat.actions.copySessionKey'))}" aria-label="${_escAttr(I18n.t('chat.actions.copySessionKey'))}">${icons.copy()}</button>
+        <span class="chip" id="chat-run-status" title="${_escAttr(I18n.t('chat.status.idle'))}">${_esc(I18n.t('chat.status.idle'))}</span>
+        <span class="chat-ctx-warn hidden" id="chat-ctx-warn">${_esc(I18n.t('chat.status.requestContext'))}</span>`;
       topbarCenter.classList.remove('hidden');
     }
 
@@ -1216,7 +1219,7 @@ const ChatView = (() => {
         <div class="chat-body">
           <div class="chat-thread" id="chat-thread"
                role="region"
-               aria-label="Chat conversation"
+               aria-label="${_escAttr(I18n.t('chat.aria.conversation'))}"
                aria-busy="false">
             ${_emptyStateHTML()}
           </div>
@@ -1226,34 +1229,34 @@ const ChatView = (() => {
           <div class="chat-attachments hidden" id="chat-attach-preview"></div>
           <div class="chat-slash hidden" id="chat-slash"></div>
           <div class="chat-input-bar">
-            <button class="btn btn--icon btn--ghost" id="chat-btn-attach" title="Attach files: PNG, JPEG, GIF, WEBP, PDF, TXT, MD, HTML, CSV, JSON" aria-label="Attach files">${icons.paperclip()}</button>
+            <button class="btn btn--icon btn--ghost" id="chat-btn-attach" title="${_escAttr(I18n.t('chat.actions.attachFiles', { types: ATTACHMENT_ALLOWED_LABEL }))}" aria-label="${_escAttr(I18n.t('chat.actions.attachFiles', { types: ATTACHMENT_ALLOWED_LABEL }))}">${icons.paperclip()}</button>
             <div class="chat-toolbar-wrap">
               <button type="button" class="btn btn--icon btn--ghost chat-toolbar-trigger" id="chat-toolbar-trigger"
-                      title="Run modes — execution, router"
-                      aria-label="Run modes"
+                      title="${_escAttr(I18n.t('chat.actions.runModesTitle'))}"
+                      aria-label="${_escAttr(I18n.t('chat.actions.runModes'))}"
                       aria-haspopup="dialog"
                       aria-expanded="false">${_iconGear()}<span class="chat-toolbar-trigger-dots" aria-hidden="true"><i data-dot="bypass"></i><i data-dot="router"></i></span></button>
-              <div class="chat-toolbar-popover hidden" id="chat-toolbar-popover" role="dialog" aria-label="Composer settings">
+              <div class="chat-toolbar-popover hidden" id="chat-toolbar-popover" role="dialog" aria-label="${_escAttr(I18n.t('chat.aria.composerSettings'))}">
                 <div class="chat-toolbar-popover-arrow" aria-hidden="true"></div>
                 <div class="chat-toolbar-popover-inner" id="chat-toolbar">
                   <div class="chat-toolbar-row">
-                    <span class="chat-toolbar-row-label">Execution mode</span>
+                    <span class="chat-toolbar-row-label">${_esc(I18n.t('chat.composer.executionMode'))}</span>
                     <button class="chat-pill chat-pill--danger" id="pill-elevated"
-                            title="Approval prompts are active. Click to enable approval bypass for this browser session.">Approval prompts</button>
+                            title="${_escAttr(I18n.t('chat.permissions.promptsTitle'))}">${_esc(I18n.t('chat.permissions.prompts'))}</button>
                   </div>
                   <div class="chat-toolbar-row">
-                    <span class="chat-toolbar-row-label">Squilla Router</span>
-                    <div class="toggle-switch-wrap" id="pill-router-group" title="Squilla router">
-                      <label class="toggle-switch" aria-label="Squilla Router">
+                    <span class="chat-toolbar-row-label">${_esc(I18n.t('chat.composer.router'))}</span>
+                    <div class="toggle-switch-wrap" id="pill-router-group" title="${_escAttr(I18n.t('chat.composer.routerTitle'))}">
+                      <label class="toggle-switch" aria-label="${_escAttr(I18n.t('chat.composer.router'))}">
                         <input type="checkbox" id="toggle-router" />
                         <span class="toggle-track"><span class="toggle-thumb"></span></span>
                       </label>
                     </div>
                   </div>
                   <div class="chat-toolbar-row">
-                    <span class="chat-toolbar-row-label">Visual effects</span>
-                    <div class="toggle-switch-wrap" id="pill-router-fx-group" title="Show router and savings effects">
-                      <label class="toggle-switch" aria-label="Visual effects">
+                    <span class="chat-toolbar-row-label">${_esc(I18n.t('chat.composer.visualEffects'))}</span>
+                    <div class="toggle-switch-wrap" id="pill-router-fx-group" title="${_escAttr(I18n.t('chat.composer.visualEffectsTitle'))}">
+                      <label class="toggle-switch" aria-label="${_escAttr(I18n.t('chat.composer.visualEffects'))}">
                         <input type="checkbox" id="toggle-router-fx" />
                         <span class="toggle-track"><span class="toggle-thumb"></span></span>
                       </label>
@@ -1264,14 +1267,14 @@ const ChatView = (() => {
             </div>
             <div class="chat-input-wrap">
               <textarea class="chat-textarea" id="chat-textarea" rows="1"
-                        placeholder="Send a message..." maxlength="100000"
-                        aria-label="Message to send"></textarea>
+                        placeholder="${_escAttr(I18n.t('chat.composer.placeholder'))}" maxlength="100000"
+                        aria-label="${_escAttr(I18n.t('chat.aria.messageToSend'))}"></textarea>
             </div>
-            <button class="btn btn--icon btn--ghost" id="chat-btn-mic" title="Record voice input" aria-label="Record voice input">${icons.microphone ? icons.microphone() : icons.chat()}</button>
-            <button class="btn btn--icon btn--ghost" id="chat-btn-new" title="New chat session in the current agent" aria-label="New chat session in the current agent">${icons.plus()}</button>
-            <button class="btn btn--icon btn--ghost" id="chat-btn-export" title="Export as Markdown" aria-label="Export as Markdown">${icons.download()}</button>
-            <button class="btn btn--icon btn--primary" id="chat-btn-send" title="Send (queues while streaming)" aria-label="Send message">${icons.send()}</button>
-            <button class="btn btn--icon btn--danger hidden" id="chat-btn-stop" title="Stop current response (Esc)" aria-label="Stop current response">${icons.stop()}</button>
+            <button class="btn btn--icon btn--ghost" id="chat-btn-mic" title="${_escAttr(I18n.t('chat.actions.recordVoice'))}" aria-label="${_escAttr(I18n.t('chat.actions.recordVoice'))}">${icons.microphone ? icons.microphone() : icons.chat()}</button>
+            <button class="btn btn--icon btn--ghost" id="chat-btn-new" title="${_escAttr(I18n.t('chat.actions.newSession'))}" aria-label="${_escAttr(I18n.t('chat.actions.newSession'))}">${icons.plus()}</button>
+            <button class="btn btn--icon btn--ghost" id="chat-btn-export" title="${_escAttr(I18n.t('chat.actions.exportMarkdown'))}" aria-label="${_escAttr(I18n.t('chat.actions.exportMarkdown'))}">${icons.download()}</button>
+            <button class="btn btn--icon btn--primary" id="chat-btn-send" title="${_escAttr(I18n.t('chat.actions.sendTitle'))}" aria-label="${_escAttr(I18n.t('chat.actions.send'))}">${icons.send()}</button>
+            <button class="btn btn--icon btn--danger hidden" id="chat-btn-stop" title="${_escAttr(I18n.t('chat.actions.stopTitle'))}" aria-label="${_escAttr(I18n.t('chat.actions.stop'))}">${icons.stop()}</button>
           </div>
         </div>
         <input type="file" id="chat-file-input" accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,text/plain,text/markdown,text/html,text/csv,application/json,.md,.markdown" multiple class="hidden" />
@@ -1534,7 +1537,7 @@ const ChatView = (() => {
       chipKey.textContent = key;
       chipKey.title = key;
     }
-    if (copyBtn) copyBtn.title = 'Copy session key: ' + key;
+    if (copyBtn) copyBtn.title = I18n.t('chat.actions.copySessionKeyValue', { key });
     // Drop every router strip that belonged to the previous session
     // the moment the chip flips, even before the new session's
     // history_load reconciles. Otherwise a persisted strip from the
@@ -1549,16 +1552,16 @@ const ChatView = (() => {
 
   function _runStatusLabel(status) {
     const labels = {
-      queued: 'Queued',
-      running: 'Running',
-      approval_pending: 'Waiting for approval',
-      interrupted: 'Interrupted',
-      failed: 'Failed',
-      timeout: 'Timed out',
-      cancelled: 'Cancelled',
-      idle: 'Idle',
+      queued: I18n.t('chat.status.queued'),
+      running: I18n.t('chat.status.running'),
+      approval_pending: I18n.t('chat.status.waitingApproval'),
+      interrupted: I18n.t('chat.status.interrupted'),
+      failed: I18n.t('chat.status.failed'),
+      timeout: I18n.t('chat.status.timeout'),
+      cancelled: I18n.t('chat.status.cancelled'),
+      idle: I18n.t('chat.status.idle'),
     };
-    return labels[status] || 'Idle';
+    return labels[status] || I18n.t('chat.status.idle');
   }
 
   function _normalizeRunStatus(status) {
@@ -1847,16 +1850,16 @@ const ChatView = (() => {
       const sourceKind = typeof item === 'object' && item
         ? (item.source_kind || item.sourceKind || '')
         : '';
-      if (channelKind === 'webchat' || sourceKind === 'webui') return 'Web chat';
-      if (channelKind === 'cli' || sourceKind === 'cli') return 'CLI';
+      if (channelKind === 'webchat' || sourceKind === 'webui') return 'webchat';
+      if (channelKind === 'cli' || sourceKind === 'cli') return 'cli';
       if (key.startsWith('agent:')) {
-        if (key.includes(':webchat')) return 'Web chat';
-        if (key.includes(':cli:') || key.includes(':standalone:')) return 'CLI';
-        if (key.includes(':subagent')) return 'Sub-agents';
-        return 'Agents';
+        if (key.includes(':webchat')) return 'webchat';
+        if (key.includes(':cli:') || key.includes(':standalone:')) return 'cli';
+        if (key.includes(':subagent')) return 'subagents';
+        return 'agents';
       }
-      if (key.startsWith('sess-')) return 'Sessions';
-      return 'Other';
+      if (key.startsWith('sess-')) return 'sessions';
+      return 'other';
     }
 
     function _dismiss() {
@@ -1879,7 +1882,7 @@ const ChatView = (() => {
 
     function _renderItems(list, sessions, filter, current) {
       list.innerHTML = '';
-      const groups = { 'Web chat': [], CLI: [], 'Sub-agents': [], Agents: [], Sessions: [], Other: [] };
+      const groups = { webchat: [], cli: [], subagents: [], agents: [], sessions: [], other: [] };
       for (const item of sessions) {
         const g = _classifyKey(item);
         if (g) groups[g].push(item);
@@ -1894,7 +1897,7 @@ const ChatView = (() => {
         group.className = 'chat-session-popover-group';
         const lbl = document.createElement('div');
         lbl.className = 'chat-session-popover-group-label';
-        lbl.textContent = label;
+        lbl.textContent = I18n.t(`chat.sessions.group.${label}`);
         group.appendChild(lbl);
         for (const item of visible) {
           const k = _itemKey(item);
@@ -1917,7 +1920,7 @@ const ChatView = (() => {
           if (k === current) {
             const tag = document.createElement('span');
             tag.className = 'chat-session-popover-item-tag';
-            tag.textContent = 'current';
+            tag.textContent = I18n.t('chat.sessions.current');
             btn.appendChild(tag);
           }
           btn.addEventListener('click', () => {
@@ -1931,7 +1934,7 @@ const ChatView = (() => {
       if (!total) {
         const empty = document.createElement('div');
         empty.className = 'chat-session-popover-empty';
-        empty.textContent = f ? 'No matches.' : 'No sessions found.';
+        empty.textContent = I18n.t(f ? 'chat.sessions.noMatches' : 'chat.sessions.none');
         list.appendChild(empty);
       }
     }
@@ -1948,20 +1951,20 @@ const ChatView = (() => {
       const pop = document.createElement('div');
       pop.className = 'chat-session-popover';
       pop.setAttribute('role', 'dialog');
-      pop.setAttribute('aria-label', 'Switch session');
+      pop.setAttribute('aria-label', I18n.t('chat.sessions.switchDialog'));
 
       const search = document.createElement('input');
       search.type = 'search';
       search.className = 'chat-session-popover-search';
-      search.placeholder = 'Search sessions…';
-      search.setAttribute('aria-label', 'Search sessions');
+      search.placeholder = I18n.t('chat.sessions.searchPlaceholder');
+      search.setAttribute('aria-label', I18n.t('chat.sessions.search'));
       search.autocomplete = 'off';
       search.spellcheck = false;
       pop.appendChild(search);
 
       const list = document.createElement('div');
       list.className = 'chat-session-popover-list';
-      list.innerHTML = '<div class="chat-session-popover-empty">Loading…</div>';
+      list.innerHTML = `<div class="chat-session-popover-empty">${_esc(I18n.t('chat.sessions.loading'))}</div>`;
       pop.appendChild(list);
 
       // Anchor below the chip via fixed positioning so the popover escapes
@@ -2015,19 +2018,19 @@ const ChatView = (() => {
       if (!_popover) return;
 
       if (!fetched) {
-        search.placeholder = 'Enter session key...';
+        search.placeholder = I18n.t('chat.sessions.enterKey');
         search.value = _sessionKey || '';
         list.innerHTML = '';
         const note = document.createElement('div');
         note.className = 'chat-session-popover-empty';
-        note.textContent = 'Session list unavailable. Enter a key above.';
+        note.textContent = I18n.t('chat.sessions.unavailable');
         list.appendChild(note);
         const manualBtn = document.createElement('button');
         manualBtn.type = 'button';
         manualBtn.className = 'chat-session-popover-item';
         const span = document.createElement('span');
         span.className = 'chat-session-popover-item-key';
-        span.textContent = 'Switch to typed session';
+        span.textContent = I18n.t('chat.sessions.switchToTyped');
         manualBtn.appendChild(span);
         const switchTyped = () => {
           const key = search.value.trim();
@@ -2161,7 +2164,9 @@ const ChatView = (() => {
       // to "Send a…". A shorter placeholder reads cleanly on every iPhone.
       if (_textarea) {
         const w = window.innerWidth;
-        const want = w <= 480 ? 'Message...' : 'Send a message...';
+        const want = I18n.t(
+          w <= 480 ? 'chat.composer.placeholderShort' : 'chat.composer.placeholder'
+        );
         if (_textarea.getAttribute('placeholder') !== want) {
           _textarea.setAttribute('placeholder', want);
         }
