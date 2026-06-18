@@ -130,6 +130,32 @@ def test_sessions_locale_files_define_matching_complete_domain() -> None:
         ), key
 
 
+def test_skills_locale_files_define_matching_complete_domain() -> None:
+    en_entries = _locale_entries(_read(LOCALE_EN), "skills.")
+    zh_entries = _locale_entries(_read(LOCALE_ZH_CN), "skills.")
+    required = {
+        "skills.title",
+        "skills.search.placeholder",
+        "skills.tabs.installed",
+        "skills.registry.searchButton",
+        "skills.stats.all",
+        "skills.empty.noInstalled",
+        "skills.dialog.close",
+        "skills.feedback.settingsUpdateFailed",
+        "skills.actions.installGithub",
+        "skills.proposals.pending",
+        "skills.requirements.title",
+        "skills.errors.loadFailed",
+    }
+
+    assert required <= set(en_entries)
+    assert set(en_entries) == set(zh_entries)
+    for key, en_value in en_entries.items():
+        assert set(re.findall(r"\{([A-Za-z0-9_]+)\}", en_value)) == set(
+            re.findall(r"\{([A-Za-z0-9_]+)\}", zh_entries[key])
+        ), key
+
+
 def test_logs_locale_files_cover_status_stats_and_empty_states() -> None:
     en = _read(LOCALE_EN)
     zh = _read(LOCALE_ZH_CN)

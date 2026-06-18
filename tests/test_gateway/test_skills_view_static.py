@@ -114,3 +114,43 @@ def test_skills_mobile_stats_keep_list_visible_in_first_viewport() -> None:
         in mobile_rule
     )
     assert ".sk-stat__value { font-size: 1.35rem; }" in mobile_rule
+
+
+def test_skills_shell_and_registry_controls_use_i18n() -> None:
+    source = SKILLS_JS.read_text(encoding="utf-8")
+
+    required = [
+        "I18n.t('skills.eyebrow')",
+        "I18n.t('skills.title')",
+        "I18n.t('skills.subtitle')",
+        "I18n.t('skills.search.placeholder')",
+        "I18n.t('skills.actions.refresh')",
+        "I18n.t('skills.tabs.installed')",
+        "I18n.t('skills.tabs.community')",
+        "I18n.t('skills.registry.searchPlaceholder')",
+        "I18n.t('skills.actions.installGithub')",
+        "I18n.t('skills.registry.hint.search')",
+    ]
+
+    for snippet in required:
+        assert snippet in source
+
+
+def test_skills_dialogs_proposals_and_feedback_use_i18n() -> None:
+    source = SKILLS_JS.read_text(encoding="utf-8")
+
+    required = [
+        "I18n.t('skills.stats.all')",
+        "I18n.t('skills.proposals.pending')",
+        "I18n.t('skills.autoPropose.title')",
+        "I18n.t('skills.requirements.title')",
+        "I18n.t('skills.dialog.close')",
+        "I18n.t('skills.feedback.settingsUpdateFailed'",
+        "I18n.t('skills.feedback.acceptFailed'",
+        "I18n.t('skills.confirm.forceAccept.title')",
+        "I18n.t('skills.actions.installVia'",
+        "I18n.t('skills.errors.searchFailed'",
+    ]
+
+    for snippet in required:
+        assert snippet in source
