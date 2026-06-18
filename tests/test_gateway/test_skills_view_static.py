@@ -154,3 +154,10 @@ def test_skills_dialogs_proposals_and_feedback_use_i18n() -> None:
 
     for snippet in required:
         assert snippet in source
+
+
+def test_skills_escapes_user_search_text_before_rendering_empty_states() -> None:
+    source = SKILLS_JS.read_text(encoding="utf-8")
+
+    assert '<p class="state-text">${_esc(msg)}</p>' in source
+    assert "${_esc(I18n.t('skills.registry.noResults', { query }))}" in source

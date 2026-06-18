@@ -384,7 +384,7 @@ const SkillsView = (() => {
               : I18n.t('skills.empty.noInstalled');
       wrap.innerHTML = `<div class="state">
         <div class="state-icon">${icons.skills()}</div>
-        <p class="state-text">${msg}</p>
+        <p class="state-text">${_esc(msg)}</p>
       </div>`;
       return;
     }
@@ -970,7 +970,7 @@ const SkillsView = (() => {
       const results = data.results || [];
       if (results.length === 0) {
         wrap.innerHTML = `<div class="sk-registry__hint">
-          <p>${I18n.t('skills.registry.noResults', { query })}</p>
+          <p>${_esc(I18n.t('skills.registry.noResults', { query }))}</p>
         </div>`;
         return;
       }

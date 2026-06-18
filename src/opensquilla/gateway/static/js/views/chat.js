@@ -1364,11 +1364,7 @@ const ChatView = (() => {
     if (_elevatedPill) {
       _elevatedPill.addEventListener('click', async () => {
         if (_elevatedUnavailable) {
-          UI.toast(
-            'Bypass requires a local owner session (loopback only).',
-            'warn',
-            4000,
-          );
+          UI.toast(I18n.t('chat.permissions.localOwnerRequired'), 'warn', 4000);
           return;
         }
         if (_elevatedMode) {
@@ -1376,9 +1372,9 @@ const ChatView = (() => {
           return;
         }
         const ok = await UI.confirm({
-          title: 'Enable approval bypass?',
-          message: '<p>This allows host execution without approval prompts in this browser session. This maps to /elevated bypass.</p><p>Sensitive-path checks remain active.</p>',
-          confirmLabel: 'Enable bypass',
+          title: I18n.t('chat.permissions.enableBypassTitle'),
+          message: I18n.t('chat.permissions.enableBypassBody'),
+          confirmLabel: I18n.t('chat.permissions.enableBypassAction'),
           danger: true,
         });
         if (ok) _setElevatedMode('bypass', { toast: true, sync: true });
@@ -2259,10 +2255,10 @@ const ChatView = (() => {
     if (options.toast) {
       UI.toast(
         normalized
-          ? `Session permission mode: ${normalized}`
+          ? I18n.t('chat.permissions.sessionMode', { mode: normalized })
           : (_globalElevatedMode
-              ? `Session override cleared; global mode: ${_globalElevatedMode}`
-              : 'Session permission override cleared'),
+              ? I18n.t('chat.permissions.sessionOverrideClearedGlobal', { mode: _globalElevatedMode })
+              : I18n.t('chat.permissions.sessionOverrideCleared')),
         normalized ? 'warn' : 'info',
         2500
       );
@@ -2290,11 +2286,7 @@ const ChatView = (() => {
         } catch {}
         _elevatedMode = '';
         _updateElevatedPill();
-        UI.toast(
-          'Bypass requires a local owner session (loopback only).',
-          'warn',
-          4000,
-        );
+        UI.toast(I18n.t('chat.permissions.localOwnerRequired'), 'warn', 4000);
         return;
       }
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -2313,8 +2305,7 @@ const ChatView = (() => {
       _elevatedPill.classList.remove('is-active');
       _elevatedPill.classList.add('chat-pill--disabled');
       _elevatedPill.textContent = I18n.t('chat.permissions.unavailable');
-      _elevatedPill.title =
-        'Bypass requires a local owner session. The gateway is bound to a non-loopback address, so this client cannot toggle elevated mode.';
+      _elevatedPill.title = I18n.t('chat.permissions.unavailableTitle');
       _elevatedPill.setAttribute('aria-disabled', 'true');
       return;
     }
@@ -2324,17 +2315,14 @@ const ChatView = (() => {
     _elevatedPill.removeAttribute('aria-disabled');
     _elevatedPill.classList.toggle('is-active', active);
     if (_elevatedMode) {
-      _elevatedPill.textContent = `Session ${_elevatedMode.toUpperCase()}`;
-      _elevatedPill.title =
-        'Session permission override is active. Approval prompts are bypassed for this browser chat session. Click to clear the override.';
+      _elevatedPill.textContent = I18n.t('chat.permissions.sessionLabel', { mode: _elevatedMode.toUpperCase() });
+      _elevatedPill.title = I18n.t('chat.permissions.sessionTitle');
     } else if (_globalElevatedMode) {
-      _elevatedPill.textContent = `Global ${_globalElevatedMode.toUpperCase()}`;
-      _elevatedPill.title =
-        'Global permission default controls execution mode and is configured by opensquilla sandbox on|bypass|full|reset.';
+      _elevatedPill.textContent = I18n.t('chat.permissions.globalLabel', { mode: _globalElevatedMode.toUpperCase() });
+      _elevatedPill.title = I18n.t('chat.permissions.globalTitle');
     } else {
       _elevatedPill.textContent = I18n.t('chat.permissions.prompts');
-      _elevatedPill.title =
-        'Approval prompts are active. Click to enable approval bypass for this browser session.';
+      _elevatedPill.title = I18n.t('chat.permissions.promptsTitle');
     }
   }
 
@@ -2769,16 +2757,18 @@ const ChatView = (() => {
           .then((result) => {
             if (usageMethod === 'usage.cost') {
               const total = result?.totalCostUsd ?? result?.total_cost_usd ?? result?.totals?.cost ?? result?.totals?.cost_usd;
-              UI.toast(total != null ? `Usage cost: $${Number(total).toFixed(6)}` : 'Usage cost unavailable', 'info');
+              UI.toast(total != null
+                ? I18n.t('chat.commands.usageCost', { cost: Number(total).toFixed(6) })
+                : I18n.t('chat.commands.usageCostUnavailable'), 'info');
               return;
             }
             const totals = result?.totals || {};
             const tokens = Number(result?.totalTokens ?? result?.total_tokens ?? totals.tokens ?? totals.total_tokens ?? totals.totalTokens ?? 0);
             const cost = result?.totalCostUsd ?? result?.total_cost_usd ?? totals.cost ?? totals.cost_usd ?? totals.costUsd;
-            UI.toast(
-              `Usage: ${tokens.toLocaleString()} tokens` + (cost != null ? ` · $${Number(cost).toFixed(6)}` : ''),
-              'info'
-            );
+            UI.toast(I18n.t('chat.commands.usageSummary', {
+              tokens: tokens.toLocaleString(),
+              cost: cost != null ? ` · $${Number(cost).toFixed(6)}` : '',
+            }), 'info');
           })
           .catch((err) => UI.toast(I18n.t('chat.errors.usageFailed', { error: err.message }), 'err'));
         break;
@@ -3301,11 +3291,9 @@ const ChatView = (() => {
     if (status === 'cancelled') {
       const recovered = _settleCompactInFlight(payload || {}, { recoverPending: true });
       if (!isReplay) {
-        UI.toast(
-          'Compact cancelled' + (recovered ? '; pending message recovered to input' : ''),
-          'info',
-          4500,
-        );
+        UI.toast(I18n.t('chat.compaction.cancelled', {
+          pending: recovered ? I18n.t('chat.compaction.pendingRecovered') : '',
+        }), 'info', 4500);
       }
       return;
     }
@@ -3688,7 +3676,7 @@ const ChatView = (() => {
     header.className = 'router-fx-header';
     header.innerHTML =
       '<span class="glyph">←</span>' +
-      '<span class="title">AI model router</span>' +
+      `<span class="title">${_esc(I18n.t('chat.router.title'))}</span>` +
       '<span class="glyph">→</span>';
     wrap.appendChild(header);
 
@@ -3800,7 +3788,9 @@ const ChatView = (() => {
     wrap.setAttribute('aria-live', mode === 'live' ? 'polite' : 'off');
     wrap.setAttribute(
       'aria-label',
-      winnerName ? `Router selected ${winnerName}` : 'Router settled'
+      winnerName
+        ? I18n.t('chat.router.selected', { model: winnerName })
+        : I18n.t('chat.router.settled')
     );
   }
 
@@ -5443,7 +5433,7 @@ const ChatView = (() => {
       if (requestSessionKey === _sessionKey && requestSeq === _historyRequestSeq) {
         _historyHydrating = false;
       }
-      _historyError = 'Could not load chat history.';
+      _historyError = I18n.t('chat.history.loadFailed');
       _chatDiag('history.error', {
         message: err && err.message ? err.message : String(err),
       });
@@ -5501,7 +5491,7 @@ const ChatView = (() => {
       });
     } catch (err) {
       _historyLoadingEarlier = false;
-      _historyError = 'Could not load earlier history.';
+      _historyError = I18n.t('chat.history.loadEarlierFailed');
       _chatDiag('history.load_earlier.error', {
         message: err && err.message ? err.message : String(err),
       });
@@ -6238,7 +6228,7 @@ const ChatView = (() => {
         message: err && err.message ? err.message : String(err),
       });
       _endStreaming();
-      _addMessage('error', 'Send failed: ' + err.message);
+      _addMessage('error', I18n.t('chat.errors.sendFailed', { error: err.message }));
     });
   }
 
@@ -7360,8 +7350,8 @@ const ChatView = (() => {
       viewBtn.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        UI.modal('Tool Result', '<pre class="chat-tool-result-full">' + _esc(content) + '</pre>', [
-          { label: 'Close', cls: 'btn-secondary' },
+        UI.modal(I18n.t('chat.tools.resultTitle'), '<pre class="chat-tool-result-full">' + _esc(content) + '</pre>', [
+          { label: I18n.t('chat.tools.close'), cls: 'btn-secondary' },
         ]);
       });
       div.appendChild(viewBtn);
@@ -8186,7 +8176,7 @@ const ChatView = (() => {
             <span class="msg-artifact-card__name">${_esc(name)}</span>
             <span class="msg-artifact-card__meta">${_esc(meta)}</span>
           </span>
-          <span class="msg-artifact-card__action" aria-hidden="true">Download</span>
+          <span class="msg-artifact-card__action" aria-hidden="true">${_esc(I18n.t('chat.artifacts.downloadAction'))}</span>
         </a>`;
       } else if (_isAudioArtifact(artifact)) {
         html += `<div class="msg-artifact-card msg-artifact-card--audio" data-artifact-category="${_escAttr(category)}" data-artifact-id="${_escAttr(artifact?.id || '')}" data-artifact-name="${_escAttr(name)}">
@@ -8195,7 +8185,7 @@ const ChatView = (() => {
             <span class="msg-artifact-card__name">${_esc(name)}</span>
             <span class="msg-artifact-card__meta">${_esc(meta)}</span>
           </span>
-          <a class="msg-artifact-card__action" href="${_escAttr(downloadHref)}" download="${_escAttr(name)}" data-artifact-download="${_escAttr(downloadUrl)}">Download</a>
+          <a class="msg-artifact-card__action" href="${_escAttr(downloadHref)}" download="${_escAttr(name)}" data-artifact-download="${_escAttr(downloadUrl)}">${_esc(I18n.t('chat.artifacts.downloadAction'))}</a>
         </div>`;
       } else {
         html += `<a class="msg-artifact-chip" href="${_escAttr(downloadHref)}" download="${_escAttr(name)}" data-artifact-category="${_escAttr(category)}" data-artifact-download="${_escAttr(downloadUrl)}" data-artifact-id="${_escAttr(artifact?.id || '')}" data-artifact-name="${_escAttr(name)}" title="${_escAttr(name)}">
@@ -8224,7 +8214,7 @@ const ChatView = (() => {
       credentials: 'same-origin',
     });
     if (!response.ok) {
-      UI.toast(`Download failed: HTTP ${response.status}`, 'warn', 3500);
+      UI.toast(I18n.t('chat.artifacts.downloadFailed', { status: response.status }), 'warn', 3500);
       return;
     }
     const blob = await response.blob();
@@ -8572,11 +8562,9 @@ const ChatView = (() => {
     const bytes = new TextEncoder().encode(raw);
     const materialEstimatedTokens = _estimateTextTokens(raw);
     if (bytes.length > ATTACHMENT_TEXT_HARD_CAP_BYTES) {
-      UI.toast(
-        `Pasted text is too large to attach directly (${Math.round(bytes.length / 1000 / 1000)} MB). Save it as a file or send a shorter summary.`,
-        'warn',
-        6000,
-      );
+      UI.toast(I18n.t('chat.attachments.pasteTooLarge', {
+        size: Math.round(bytes.length / 1000 / 1000),
+      }), 'warn', 6000);
       return null;
     }
 
@@ -9033,7 +9021,7 @@ const ChatView = (() => {
     // Recover queued messages back into the composer so the user can edit
     // and resend rather than losing them. Idempotent on empty queue.
     const recovered = _popAllPendingIntoComposer();
-    UI.toast(recovered ? 'Stopped — pending recovered to input' : 'Stopped', 'warn', 1800);
+    UI.toast(I18n.t(recovered ? 'chat.feedback.stoppedRecovered' : 'chat.feedback.stopped'), 'warn', 1800);
   }
 
   // Delegated click handler bound once in _bindEvents() — prevents the per-render
@@ -9096,11 +9084,10 @@ const ChatView = (() => {
     attachmentsOverride = null,
   ) {
     if (_pendingQueue.length >= _MAX_PENDING) {
-      UI.toast(
-        `Pending queue full (${_MAX_PENDING}). Wait for ${waitReason} or clear.`,
-        'warning',
-        3000,
-      );
+      UI.toast(I18n.t('chat.pending.full', {
+        max: _MAX_PENDING,
+        reason: waitReason,
+      }), 'warning', 3000);
       return false;
     }
     const queuedAttachments = attachmentsOverride || _pendingAttachments;
@@ -9115,7 +9102,10 @@ const ChatView = (() => {
     _renderAttachmentPreview();
     _renderPendingQueue();
     _autoResizeTextarea();
-    UI.toast(toastMessage || `Queued (${_pendingQueue.length}/${_MAX_PENDING})`, 'info', 1500);
+    UI.toast(toastMessage || I18n.t('chat.pending.queued', {
+      count: _pendingQueue.length,
+      max: _MAX_PENDING,
+    }), 'info', 1500);
     return true;
   }
 
@@ -9216,7 +9206,7 @@ const ChatView = (() => {
     const recovered = _popAllPendingIntoComposer();
     if (recovered) {
       const label = _runStatusLabel(_normalizeRunStatus(status)).toLowerCase();
-      UI.toast(`Pending message recovered after ${label}`, 'warn', 2500);
+      UI.toast(I18n.t('chat.pending.recoveredAfter', { status: label }), 'warn', 2500);
     }
     return recovered;
   }

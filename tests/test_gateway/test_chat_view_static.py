@@ -917,7 +917,7 @@ def test_chat_usage_slash_commands_call_usage_rpcs() -> None:
         "? 'usage.cost' : 'usage.status';"
     ) in selector
     assert "_rpc.call(usageMethod)" in selector
-    assert "Usage cost" in source
+    assert "I18n.t('chat.commands.usageCost'" in source
 
 
 def test_chat_usage_slash_status_reads_top_level_and_totals_fields() -> None:
@@ -1422,7 +1422,7 @@ def test_chat_surfaces_compaction_lifecycle_status_and_exception_toasts() -> Non
     assert "Context compacted older messages to keep this session within budget" not in source
     assert "I18n.t('chat.compaction.temporary')" in source
     assert "I18n.t('chat.compaction.temporary')" in body
-    assert "Compact cancelled" in source
+    assert "I18n.t('chat.compaction.cancelled'" in source
     assert "function _compactionUserVisible(payload, source, status)" in source
     assert "!_compactionUserVisible(payload || {}, source, status)" in source
     assert "structured content noop" not in source.lower()
@@ -1599,7 +1599,8 @@ def test_chat_compact_inflight_uses_pending_queue_and_safe_terminal_drain() -> N
     assert "_enqueuePendingInput(" in send_body
     assert "'Message queued until compaction finishes'" in send_body
     assert "'context compaction'" in send_body
-    assert "Wait for ${waitReason} or clear." in source
+    assert "I18n.t('chat.pending.full'" in source
+    assert "reason: waitReason" in source
     assert "_settleCompactInFlight(payload || {});" in toast_body
     assert "status === 'completed'" in source
     assert "status === 'skipped'" in source
@@ -1834,7 +1835,7 @@ def test_turn_meta_and_router_share_model_display_normalization() -> None:
 def test_router_fx_header_names_ai_model_router() -> None:
     source = CHAT_JS.read_text(encoding="utf-8")
 
-    assert '<span class="title">AI model router</span>' in source
+    assert "I18n.t('chat.router.title')" in source
     assert '<span class="title">model router</span>' not in source
 
 
@@ -1968,10 +1969,10 @@ def test_chat_history_render_preserves_visible_messages_on_errors() -> None:
     earlier_end = source.index("function _renderHistoryMessages(", earlier_start)
     earlier_body = source[earlier_start:earlier_end]
 
-    assert "_historyError = 'Could not load chat history.'" in initial_body
+    assert "_historyError = I18n.t('chat.history.loadFailed');" in initial_body
     assert "_renderHistoryScopeRow();" in initial_body
     assert "_thread.innerHTML = ''" not in initial_body
-    assert "_historyError = 'Could not load earlier history.'" in earlier_body
+    assert "_historyError = I18n.t('chat.history.loadEarlierFailed');" in earlier_body
     assert "_renderHistoryScopeRow();" in earlier_body
     assert "_thread.innerHTML = ''" not in earlier_body
 
@@ -2492,7 +2493,8 @@ def test_router_fx_settled_semantics_expose_render_mode_and_result() -> None:
     assert "wrap.dataset.renderMode = mode;" in body
     assert "wrap.setAttribute('role', mode === 'live' ? 'status' : 'group');" in body
     assert "wrap.setAttribute('aria-live', mode === 'live' ? 'polite' : 'off');" in body
-    assert "winnerName ? `Router selected ${winnerName}` : 'Router settled'" in body
+    assert "I18n.t('chat.router.selected', { model: winnerName })" in body
+    assert "I18n.t('chat.router.settled')" in body
 
 
 def test_done_stream_bubble_survives_until_history_persists_assistant() -> None:
@@ -2993,7 +2995,7 @@ def test_chat_replayed_compaction_terminal_restores_separator_without_toast() ->
     assert "if (isReplay && !_compactionTerminalStatus(status)) return;" in body
     assert "if (meta && meta.replayed) return;" not in body
     assert "if (!isReplay) UI.toast(I18n.t('chat.errors.compactionFailed'" in body
-    assert "if (!isReplay) {\n        UI.toast(\n          'Compact cancelled'" in body
+    assert "if (!isReplay) {\n        UI.toast(I18n.t('chat.compaction.cancelled'" in body
 
 
 def test_chat_terminal_compaction_separator_persists_for_completed_manual_and_auto() -> None:
@@ -3408,3 +3410,46 @@ def test_chat_queue_drain_preserves_draft_typed_during_stream() -> None:
     assert "_pendingAttachments = draftAttachments;" in body
     assert "_pendingSessionIntent = draftIntent;" in body
     assert body.index("_onSend();") < body.index("_textarea.value = draftText;")
+
+
+def test_chat_frontend_owned_status_and_feedback_do_not_keep_hardcoded_english() -> None:
+    source = CHAT_JS.read_text(encoding="utf-8")
+    forbidden = [
+        "Bypass requires a local owner session",
+        "Enable approval bypass?",
+        "Session permission mode:",
+        "Usage cost unavailable",
+        "AI model router",
+        "Compact cancelled",
+        "Could not load chat history.",
+        "Send failed:",
+        "UI.modal('Tool Result'",
+        ">Download<",
+        "Download failed: HTTP",
+        "Pasted text is too large to attach directly",
+        "Stopped \u2014 pending recovered to input",
+        "Pending queue full",
+        "Pending message recovered after",
+    ]
+
+    for text in forbidden:
+        assert text not in source
+
+    required_keys = [
+        "chat.permissions.localOwnerRequired",
+        "chat.permissions.enableBypassTitle",
+        "chat.commands.usageCostUnavailable",
+        "chat.router.title",
+        "chat.compaction.cancelled",
+        "chat.history.loadFailed",
+        "chat.errors.sendFailed",
+        "chat.tools.resultTitle",
+        "chat.artifacts.download",
+        "chat.artifacts.downloadFailed",
+        "chat.attachments.pasteTooLarge",
+        "chat.feedback.stoppedRecovered",
+        "chat.pending.full",
+        "chat.pending.recoveredAfter",
+    ]
+    for key in required_keys:
+        assert key in source

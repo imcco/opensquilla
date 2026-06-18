@@ -76,10 +76,12 @@ def test_chat_permission_pill_distinguishes_global_and_session_modes() -> None:
     assert "I18n.t('chat.composer.executionMode')" in source
     assert '<span class="chat-toolbar-row-label">Approvals</span>' not in source
     assert "cfg?.permissions?.default_mode" in source
-    assert "Global ${_globalElevatedMode.toUpperCase()}" in source
-    assert "Session ${_elevatedMode.toUpperCase()}" in source
-    assert "Approval prompts are active" in source
-    assert "opensquilla sandbox on|bypass|full|reset" in source
+    assert "I18n.t('chat.permissions.globalLabel'" in source
+    assert "I18n.t('chat.permissions.sessionLabel'" in source
+    assert "_globalElevatedMode.toUpperCase()" in source
+    assert "_elevatedMode.toUpperCase()" in source
+    assert "I18n.t('chat.permissions.promptsTitle')" in source
+    assert "I18n.t('chat.permissions.globalTitle')" in source
     assert "Bypass Off" not in source
 
     # The legacy image-only `accept="image/*" multiple` literal must be gone:
@@ -104,7 +106,7 @@ def test_webui_bypass_shortcuts_do_not_enable_full_mode() -> None:
     assert "ELEVATED_MODE_VERSION_KEY" in chat_source
     assert "localStorage.getItem(_ELEVATED_MODE_VERSION_KEY)" in chat_source
     assert "if (ok) _setElevatedMode('bypass', { toast: true, sync: true });" in chat_source
-    assert "This maps to /elevated bypass" in chat_source
+    assert "I18n.t('chat.permissions.enableBypassBody')" in chat_source
     assert "action === 'bypass' ? 'bypass' : ''" in monitor_source
     assert "decision === 'bypass' ? 'bypass' : ''" in approvals_source
     assert "maps to /elevated full" not in combined

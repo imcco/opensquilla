@@ -1248,8 +1248,8 @@ def test_config_view_links_to_guided_setup():
 
 def test_channels_view_remains_status_only_but_links_guided_setup():
     txt = (VIEWS / "channels.js").read_text(encoding="utf-8")
-    assert "Runtime status" in txt
-    assert "Guided setup" in txt
+    assert "I18n.t('channels.subtitle')" in txt
+    assert "I18n.t('channels.empty.guidedSetup')" in txt
     assert "Router.navigate('/setup')" in txt
     assert "onboarding.channel.upsert" not in txt
     assert "channels.restart" not in txt
