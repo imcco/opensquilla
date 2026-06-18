@@ -67,6 +67,47 @@ def test_single_session_delete_checks_backend_partial_failure_response() -> None
     assert "res.deleted" in body
     assert "deleted.includes(key)" in body
     assert "typeof first === 'string'" in body
-    assert "Session deleted" in body
-    assert "Delete failed" in body
-    assert body.index("res.errors") < body.index("Session deleted")
+    assert "I18n.t('sessions.feedback.deleteSuccess')" in body
+    assert "I18n.t('sessions.errors.deleteFailed'" in body
+    assert body.index("res.errors") < body.index("I18n.t('sessions.feedback.deleteSuccess')")
+
+
+def test_sessions_user_facing_shell_and_feedback_use_i18n() -> None:
+    source = SESSIONS_JS.read_text(encoding="utf-8")
+
+    required = [
+        "I18n.t('sessions.eyebrow')",
+        "I18n.t('sessions.title')",
+        "I18n.t('sessions.subtitle')",
+        "I18n.t('sessions.search.placeholder')",
+        "I18n.t('sessions.actions.refresh')",
+        "I18n.t('sessions.actions.new')",
+        "I18n.t('sessions.table.all')",
+        "I18n.t('sessions.empty.noneTitle')",
+        "I18n.t('sessions.feedback.copySuccess')",
+        "I18n.t('sessions.modal.deleteOne.title')",
+        "I18n.t('sessions.modal.newSession.title')",
+    ]
+
+    for snippet in required:
+        assert snippet in source
+
+
+def test_sessions_dialogs_and_runtime_labels_use_i18n() -> None:
+    source = SESSIONS_JS.read_text(encoding="utf-8")
+
+    required = [
+        "I18n.t('sessions.stats.total')",
+        "I18n.t('sessions.stats.executing')",
+        "I18n.t('sessions.stats.messages')",
+        "I18n.t('sessions.modal.deleteMany.title')",
+        "I18n.t('sessions.modal.deleteOne.confirm'",
+        "I18n.t('sessions.modal.newSession.submit')",
+        "I18n.t('sessions.run.queued')",
+        "I18n.t('sessions.run.running')",
+        "I18n.t('sessions.agent.orphaned')",
+        "I18n.t('sessions.errors.loadFailed'",
+    ]
+
+    for snippet in required:
+        assert snippet in source

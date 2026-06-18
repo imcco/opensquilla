@@ -104,6 +104,32 @@ def test_chat_locale_files_define_matching_complete_domain() -> None:
         ), key
 
 
+def test_sessions_locale_files_define_matching_complete_domain() -> None:
+    en_entries = _locale_entries(_read(LOCALE_EN), "sessions.")
+    zh_entries = _locale_entries(_read(LOCALE_ZH_CN), "sessions.")
+    required = {
+        "sessions.title",
+        "sessions.search.placeholder",
+        "sessions.stats.total",
+        "sessions.table.key",
+        "sessions.actions.new",
+        "sessions.actions.copyKey",
+        "sessions.empty.noneTitle",
+        "sessions.feedback.copySuccess",
+        "sessions.modal.deleteOne.title",
+        "sessions.modal.newSession.title",
+        "sessions.run.running",
+        "sessions.agent.orphaned",
+    }
+
+    assert required <= set(en_entries)
+    assert set(en_entries) == set(zh_entries)
+    for key, en_value in en_entries.items():
+        assert set(re.findall(r"\{([A-Za-z0-9_]+)\}", en_value)) == set(
+            re.findall(r"\{([A-Za-z0-9_]+)\}", zh_entries[key])
+        ), key
+
+
 def test_logs_locale_files_cover_status_stats_and_empty_states() -> None:
     en = _read(LOCALE_EN)
     zh = _read(LOCALE_ZH_CN)

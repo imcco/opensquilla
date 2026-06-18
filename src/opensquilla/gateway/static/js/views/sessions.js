@@ -29,20 +29,20 @@ const SessionsView = (() => {
       <div class="sess-stage">
         <header class="sess-stage__header">
           <div class="sess-stage__title-block">
-            <span class="sess-stage__eyebrow">Control · Sessions</span>
-            <h2 class="sess-stage__title">Sessions</h2>
-            <p class="sess-stage__subtitle">Session history, current task activity, and agent runs — open one to chat, or clean up old state.</p>
+            <span class="sess-stage__eyebrow">${I18n.t('sessions.eyebrow')}</span>
+            <h2 class="sess-stage__title">${I18n.t('sessions.title')}</h2>
+            <p class="sess-stage__subtitle">${I18n.t('sessions.subtitle')}</p>
           </div>
           <div class="sess-stage__actions">
             <div class="sess-search-wrap">
               <span class="sess-search-icon">${icons.search()}</span>
-              <input type="text" class="sess-search-input" id="sess-search" placeholder="Search session keys…" autocomplete="off" />
+              <input type="text" class="sess-search-input" id="sess-search" placeholder="${_escAttr(I18n.t('sessions.search.placeholder'))}" autocomplete="off" />
             </div>
-            <button class="btn btn--ghost" id="sess-refresh" title="Refresh">
-              ${icons.refresh()}<span>Refresh</span>
+            <button class="btn btn--ghost" id="sess-refresh" title="${_escAttr(I18n.t('sessions.actions.refresh'))}">
+              ${icons.refresh()}<span>${I18n.t('sessions.actions.refresh')}</span>
             </button>
             <button class="btn btn--primary" id="sess-new">
-              ${icons.plus()}<span>New session</span>
+              ${icons.plus()}<span>${I18n.t('sessions.actions.new')}</span>
             </button>
           </div>
         </header>
@@ -50,18 +50,18 @@ const SessionsView = (() => {
         <section class="stat-row" id="stat-row"></section>
 
         <div class="sess-bulk-bar" id="sess-bulk-bar" hidden>
-          <span class="sess-bulk-bar__count"><strong id="sess-bulk-count">0</strong> selected</span>
-          <button class="sess-iconbtn sess-iconbtn--ghost" id="sess-bulk-clear">Clear</button>
+          <span class="sess-bulk-bar__count"><strong id="sess-bulk-count">0</strong> ${I18n.t('sessions.bulk.selectedSuffix')}</span>
+          <button class="sess-iconbtn sess-iconbtn--ghost" id="sess-bulk-clear">${I18n.t('sessions.bulk.clear')}</button>
           <span class="sess-bulk-bar__spacer"></span>
-          <button class="sess-iconbtn sess-iconbtn--danger" id="sess-bulk-delete">${icons.trash()}<span>Delete selected</span></button>
+          <button class="sess-iconbtn sess-iconbtn--danger" id="sess-bulk-delete">${icons.trash()}<span>${I18n.t('sessions.bulk.delete')}</span></button>
         </div>
 
         <section class="sess-list">
           <div class="sess-list__head">
-            <h3 class="sess-list__title" id="sess-list-title">All sessions</h3>
+            <h3 class="sess-list__title" id="sess-list-title">${I18n.t('sessions.table.all')}</h3>
             <div class="sess-list__controls">
               <label class="sess-page-size">
-                <span>Show</span>
+                <span>${I18n.t('sessions.table.show')}</span>
                 <select id="sess-page-size">
                   <option value="10">10</option>
                   <option value="25" selected>25</option>
@@ -155,7 +155,9 @@ const SessionsView = (() => {
       _renderPagination();
       _renderBulkBar();
     } else {
-      UI.toast('Failed to load sessions: ' + (sessRes.reason?.message || 'unknown error'), 'err');
+      UI.toast(I18n.t('sessions.errors.loadFailed', {
+        error: sessRes.reason?.message || I18n.t('common.unknownError'),
+      }), 'err');
     }
   }
 
@@ -219,21 +221,29 @@ const SessionsView = (() => {
 
     wrap.innerHTML = `
       <div class="stat stat--hero">
-        <div class="stat-label">Total sessions</div>
+        <div class="stat-label">${I18n.t('sessions.stats.total')}</div>
         <div class="stat-value">${total}</div>
-        <div class="stat-hint">${lifecycleOpen} open · ${done} completed · ${failedOrTimedOut} failed/timed out · ${aborted} aborted</div>
+        <div class="stat-hint">${_esc(I18n.t('sessions.stats.totalHint', {
+          open: lifecycleOpen,
+          done,
+          failed: failedOrTimedOut,
+          aborted,
+        }))}</div>
       </div>
-      <div class="stat" title="Sessions with queued or running tasks">
-        <div class="stat-label">Executing</div>
+      <div class="stat" title="${_escAttr(I18n.t('sessions.stats.executingTitle'))}">
+        <div class="stat-label">${I18n.t('sessions.stats.executing')}</div>
         <div class="stat-value">
           ${activeRuns}${activeRuns ? '<span class="dot ok"></span>' : ''}
         </div>
-        <div class="stat-hint">${activeRuns ? 'tasks queued/running' : 'none executing'}</div>
+        <div class="stat-hint">${activeRuns ? I18n.t('sessions.stats.executingActive') : I18n.t('sessions.stats.executingIdle')}</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Messages</div>
+        <div class="stat-label">${I18n.t('sessions.stats.messages')}</div>
         <div class="stat-value mono">${totalMessages.toLocaleString()}</div>
-        <div class="stat-hint">${agents.size} agent${agents.size === 1 ? '' : 's'} · across all sessions</div>
+        <div class="stat-hint">${_esc(I18n.t('sessions.stats.messagesHint', {
+          count: agents.size,
+          noun: I18n.t(agents.size === 1 ? 'sessions.stats.agentSingular' : 'sessions.stats.agentPlural'),
+        }))}</div>
       </div>`;
     // Storage KPI removed: backend rpc_sessions.py sets size_bytes=None on every
     // row, so the aggregate was always 0 B and the card displayed dead data.
@@ -252,8 +262,8 @@ const SessionsView = (() => {
     if (titleEl) {
       const total = _allSessions.length;
       titleEl.innerHTML = _searchVal
-        ? `Matching sessions <span class="sess-list__count">${_filtered.length} of ${total}</span>`
-        : `All sessions <span class="sess-list__count">${total}</span>`;
+        ? `${_esc(I18n.t('sessions.table.matching'))} <span class="sess-list__count">${_esc(I18n.t('sessions.table.ofTotal', { count: _filtered.length, total }))}</span>`
+        : `${_esc(I18n.t('sessions.table.all'))} <span class="sess-list__count">${total}</span>`;
     }
 
     if (slice.length === 0 && _allSessions.length === 0) {
@@ -273,10 +283,10 @@ const SessionsView = (() => {
     // one column to avoid showing identical numbers twice.
     const cols = [
       { key: 'select', label: '' },
-      { key: 'key', label: 'Session key' },
-      { key: 'status', label: 'Status' },
-      { key: 'message_count', label: 'Msgs' },
-      { key: 'updated_at', label: 'Modified' },
+      { key: 'key', label: I18n.t('sessions.table.key') },
+      { key: 'status', label: I18n.t('sessions.table.status') },
+      { key: 'message_count', label: I18n.t('sessions.table.messages') },
+      { key: 'updated_at', label: I18n.t('sessions.table.modified') },
       { key: '_actions', label: '' },
     ];
     const sortable = ['key', 'updated_at', 'message_count'];
@@ -305,9 +315,9 @@ const SessionsView = (() => {
       const status = visualStatus;
       const statusCls = UI.sessionStatusClass(status);
       const statusChip = UI.sessionStatusChip(status);
-      const statusTip = UI.sessionStatusLabel(status);
+      const statusTip = _sessionStatusLabel(status);
       const runBadge = _runStatusBadge(row);
-      const modified = row.updated_at ? UI.relTime(row.updated_at) : '—';
+      const modified = row.updated_at ? UI.relTime(row.updated_at) : I18n.t('common.notAvailable');
       const isSel = _selected.has(row.key);
       const agentId = row.agent_id || row.agentId || _agentIdFromKey(row.key);
       const agentMeta = _agentSubline(agentId);
@@ -316,17 +326,17 @@ const SessionsView = (() => {
         <td class="sess-table__cell--key">
           <div class="sess-table__key-content">
             <span class="dot ${statusCls}" title="${_esc(statusTip)}"></span>
-            <button type="button" class="sess-key-link" data-open-key="${_esc(row.key)}" title="Open chat">${_esc(row.key)}</button>
+            <button type="button" class="sess-key-link" data-open-key="${_esc(row.key)}" title="${_escAttr(I18n.t('sessions.actions.openChat'))}">${_esc(row.key)}</button>
             ${agentMeta}
           </div>
         </td>
         <td><div class="sess-status-stack"><span class="chip ${statusChip}">${_esc(statusTip)}</span>${runBadge}</div></td>
-        <td class="sess-mono">${row.message_count != null ? Number(row.message_count).toLocaleString() : '—'}</td>
+        <td class="sess-mono">${row.message_count != null ? Number(row.message_count).toLocaleString() : I18n.t('common.notAvailable')}</td>
         <td class="sess-mono sess-dim">${_esc(modified)}</td>
         <td class="sess-table__cell--actions">
-          <button class="sess-iconbtn" data-open-key="${_esc(row.key)}" title="Open chat" aria-label="Open chat for ${_esc(row.key)}">${icons.chat()}</button>
-          <button class="sess-iconbtn" data-copy-key="${_esc(row.key)}" title="Copy session key" aria-label="Copy session key ${_esc(row.key)}">${icons.copy()}</button>
-          <button class="sess-iconbtn sess-iconbtn--danger" data-del-key="${_esc(row.key)}" title="Delete" aria-label="Delete session ${_esc(row.key)}">${icons.trash()}</button>
+          <button class="sess-iconbtn" data-open-key="${_esc(row.key)}" title="${_escAttr(I18n.t('sessions.actions.openChat'))}" aria-label="${_escAttr(I18n.t('sessions.actions.openChatFor', { key: row.key }))}">${icons.chat()}</button>
+          <button class="sess-iconbtn" data-copy-key="${_esc(row.key)}" title="${_escAttr(I18n.t('sessions.actions.copyKey'))}" aria-label="${_escAttr(I18n.t('sessions.actions.copyKeyValue', { key: row.key }))}">${icons.copy()}</button>
+          <button class="sess-iconbtn sess-iconbtn--danger" data-del-key="${_esc(row.key)}" title="${_escAttr(I18n.t('sessions.actions.delete'))}" aria-label="${_escAttr(I18n.t('sessions.actions.deleteValue', { key: row.key }))}">${icons.trash()}</button>
         </td>
       </tr>`;
     });
@@ -376,9 +386,9 @@ const SessionsView = (() => {
         const key = btn.dataset.copyKey;
         try {
           await navigator.clipboard.writeText(key);
-          UI.toast('Copied session key', 'ok');
+          UI.toast(I18n.t('sessions.feedback.copySuccess'), 'ok');
         } catch {
-          UI.toast('Copy failed', 'warn');
+          UI.toast(I18n.t('sessions.errors.copyFailed'), 'warn');
         }
       });
     });
@@ -412,8 +422,8 @@ const SessionsView = (() => {
     if (filtered) {
       return `<div class="state">
         <div class="state-icon">${icons.search()}</div>
-        <div class="state-title">No matches</div>
-        <p class="state-text">No sessions match your search. Try a different query, or clear it to see everything.</p>
+        <div class="state-title">${I18n.t('sessions.empty.filteredTitle')}</div>
+        <p class="state-text">${I18n.t('sessions.empty.filteredBody')}</p>
       </div>`;
     }
     return `<div class="sess-empty">
@@ -442,9 +452,9 @@ const SessionsView = (() => {
           <circle cx="98" cy="50" r="4" fill="var(--accent)" class="sess-empty__pulse"/>
         </svg>
       </div>
-      <div class="sess-empty__title">No sessions yet.</div>
-      <p class="sess-empty__msg">Sessions appear here as soon as you chat with an agent or schedule a cron job.<br/>Start one and pick up the conversation any time.</p>
-      <button class="btn btn--primary sess-empty__cta" data-sess-empty-create>${icons.plus()}<span>Start a new session</span></button>
+      <div class="sess-empty__title">${I18n.t('sessions.empty.noneTitle')}</div>
+      <p class="sess-empty__msg">${I18n.t('sessions.empty.noneBody')}</p>
+      <button class="btn btn--primary sess-empty__cta" data-sess-empty-create>${icons.plus()}<span>${I18n.t('sessions.empty.start')}</span></button>
     </div>`;
   }
 
@@ -459,9 +469,9 @@ const SessionsView = (() => {
     const totalPages = Math.max(1, Math.ceil(_filtered.length / _pageSize));
     if (_filtered.length === 0) { pag.innerHTML = ''; return; }
     pag.innerHTML = `
-      <button class="sess-page-btn" id="sess-prev" ${_page === 0 ? 'disabled' : ''} title="Previous page">‹</button>
-      <span class="sess-page-info">${_page + 1} / ${totalPages} <span class="sess-dim">· ${_filtered.length} total</span></span>
-      <button class="sess-page-btn" id="sess-next" ${_page >= totalPages - 1 ? 'disabled' : ''} title="Next page">›</button>`;
+      <button class="sess-page-btn" id="sess-prev" ${_page === 0 ? 'disabled' : ''} title="${_escAttr(I18n.t('sessions.pagination.prev'))}">‹</button>
+      <span class="sess-page-info">${_page + 1} / ${totalPages} <span class="sess-dim">· ${_esc(I18n.t('sessions.pagination.total', { count: _filtered.length }))}</span></span>
+      <button class="sess-page-btn" id="sess-next" ${_page >= totalPages - 1 ? 'disabled' : ''} title="${_escAttr(I18n.t('sessions.pagination.next'))}">›</button>`;
     pag.querySelector('#sess-prev')?.addEventListener('click', () => { _page--; _renderTable(); _renderPagination(); });
     pag.querySelector('#sess-next')?.addEventListener('click', () => { _page++; _renderTable(); _renderPagination(); });
   }
@@ -495,12 +505,12 @@ const SessionsView = (() => {
     const keys = Array.from(_selected);
     if (keys.length === 0) return;
     UI.modal(
-      'Delete sessions',
-      `<p>Delete <strong>${keys.length}</strong> session${keys.length === 1 ? '' : 's'}? This cannot be undone.</p>
-       <p class="sess-modal__warn"><small>The transcript will not be flushed to disk; use <code>/reset</code> first if you want a backup.</small></p>`,
+      I18n.t('sessions.modal.deleteMany.title'),
+      `<p>${_esc(I18n.t('sessions.modal.deleteMany.confirm', { count: keys.length }))}</p>
+       <p class="sess-modal__warn"><small>${_esc(I18n.t('sessions.modal.warning'))}</small></p>`,
       [
         {
-          label: 'Delete all', cls: 'btn--danger', onClick: async () => {
+          label: I18n.t('sessions.modal.deleteMany.action'), cls: 'btn--danger', onClick: async () => {
             // Backend sessions.delete (rpc_sessions.py:1466) accepts {keys:[...]}
             // for batch deletion and returns {deleted: [...], errors: [...]}.
             // One round-trip instead of N preserves partial-failure semantics
@@ -510,30 +520,35 @@ const SessionsView = (() => {
               const errCount = (res && res.errors && res.errors.length) || 0;
               const okCount = (res && res.deleted && res.deleted.length) ?? (keys.length - errCount);
               if (errCount > 0) {
-                UI.toast(`Deleted ${okCount}, ${errCount} failed`, 'warn');
+                UI.toast(I18n.t('sessions.feedback.bulkDeletePartial', {
+                  deleted: okCount,
+                  failed: errCount,
+                }), 'warn');
               } else {
-                UI.toast(`Deleted ${okCount} session${okCount === 1 ? '' : 's'}`, 'info');
+                UI.toast(I18n.t('sessions.feedback.bulkDeleteSuccess', { count: okCount }), 'info');
               }
             } catch (err) {
-              UI.toast('Bulk delete failed: ' + (err?.message || 'unknown error'), 'err');
+              UI.toast(I18n.t('sessions.errors.bulkDeleteFailed', {
+                error: err?.message || I18n.t('common.unknownError'),
+              }), 'err');
             }
             _selected.clear();
             _loadData();
           }
         },
-        { label: 'Cancel', cls: '' },
+        { label: I18n.t('common.cancel'), cls: '' },
       ]
     );
   }
 
   function _deleteSession(key) {
     UI.modal(
-      'Delete session',
-      `<p>Delete session <strong>${_esc(key)}</strong>? This cannot be undone.</p>
-       <p class="sess-modal__warn"><small>The transcript will not be flushed to disk; use <code>/reset</code> first if you want a backup.</small></p>`,
+      I18n.t('sessions.modal.deleteOne.title'),
+      `<p>${_esc(I18n.t('sessions.modal.deleteOne.confirm', { key }))}</p>
+       <p class="sess-modal__warn"><small>${_esc(I18n.t('sessions.modal.warning'))}</small></p>`,
       [
         {
-          label: 'Delete', cls: 'btn--danger', onClick: async () => {
+          label: I18n.t('sessions.modal.deleteOne.action'), cls: 'btn--danger', onClick: async () => {
             try {
               const res = await _rpc.call('sessions.delete', { key });
               const errors = Array.isArray(res?.errors) ? res.errors : [];
@@ -542,18 +557,20 @@ const SessionsView = (() => {
                 const first = errors[0];
                 const reason = typeof first === 'string'
                   ? first
-                  : (first?.message || first?.error || first?.reason || 'session was not deleted');
-                UI.toast('Delete failed: ' + reason, 'err');
+                  : (first?.message || first?.error || first?.reason || I18n.t('sessions.errors.notDeleted'));
+                UI.toast(I18n.t('sessions.errors.deleteFailed', { error: reason }), 'err');
               } else {
-                UI.toast('Session deleted', 'info');
+                UI.toast(I18n.t('sessions.feedback.deleteSuccess'), 'info');
               }
             } catch (err) {
-              UI.toast('Delete failed: ' + (err?.message || 'unknown error'), 'err');
+              UI.toast(I18n.t('sessions.errors.deleteFailed', {
+                error: err?.message || I18n.t('common.unknownError'),
+              }), 'err');
             }
             _loadData();
           }
         },
-        { label: 'Cancel', cls: '' },
+        { label: I18n.t('common.cancel'), cls: '' },
       ]
     );
   }
@@ -565,20 +582,20 @@ const SessionsView = (() => {
     overlay.className = 'modal-backdrop';
     overlay.innerHTML = `
       <div class="modal sess-newchat-modal" role="dialog" aria-modal="true" aria-labelledby="ns-title">
-        <div class="modal-title" id="ns-title">Start a new chat</div>
+        <div class="modal-title" id="ns-title">${I18n.t('sessions.modal.newSession.title')}</div>
         <div class="modal-body">
           <div class="sess-form">
             <label class="sess-form__field">
-              <span class="sess-form__label">Agent</span>
+              <span class="sess-form__label">${I18n.t('sessions.modal.newSession.agent')}</span>
             <div data-ns-agent-host></div>
-              <small class="sess-form__hint">Pick an agent or type a new ID to create it.</small>
+              <small class="sess-form__hint">${I18n.t('sessions.modal.newSession.hint')}</small>
             </label>
             <div class="sess-form__error" data-ns-error hidden></div>
           </div>
         </div>
         <div class="modal-foot">
-          <button class="btn" data-ns-cancel>Cancel</button>
-          <button class="btn btn--primary" data-ns-submit disabled>Start chat</button>
+          <button class="btn" data-ns-cancel>${I18n.t('common.cancel')}</button>
+          <button class="btn btn--primary" data-ns-submit disabled>${I18n.t('sessions.modal.newSession.submit')}</button>
         </div>
       </div>`;
 
@@ -593,7 +610,7 @@ const SessionsView = (() => {
       agents = (data?.agents || []).map(a => ({
         id: a.id,
         label: a.name || a.id,
-        sublabel: a.model || (a.isBuiltin || a.type === 'builtin' ? 'built-in' : ''),
+        sublabel: a.model || (a.isBuiltin || a.type === 'builtin' ? I18n.t('sessions.modal.newSession.builtin') : ''),
       }));
     } catch (err) {
       // Non-fatal — combobox will show an empty list but still accepts typed IDs.
@@ -606,10 +623,10 @@ const SessionsView = (() => {
     const combo = UI.combobox({
       items: agents,
       value: agents.find(a => a.id === 'main') ? 'main' : '',
-      placeholder: 'Pick an agent or type a new ID',
-      emptyText: agents.length ? 'No matches' : 'No agents — type to create one',
+      placeholder: I18n.t('sessions.modal.newSession.placeholder'),
+      emptyText: agents.length ? I18n.t('sessions.modal.newSession.noMatches') : I18n.t('sessions.modal.newSession.noAgents'),
       allowCreate: true,
-      createLabel: (typed) => `↵ Create new agent "${typed}"`,
+      createLabel: (typed) => I18n.t('sessions.modal.newSession.createLabel', { typed }),
       onChange: (id) => {
         selectedAgentId = id || '';
         createPending = false;
@@ -677,7 +694,7 @@ const SessionsView = (() => {
       }
       submitBtn.disabled = true;
       const prevLabel = submitBtn.textContent;
-      submitBtn.textContent = createPending ? 'Creating…' : 'Starting…';
+      submitBtn.textContent = createPending ? I18n.t('sessions.modal.newSession.creating') : I18n.t('sessions.modal.newSession.starting');
       try {
         if (createPending) {
           try {
@@ -689,7 +706,9 @@ const SessionsView = (() => {
         }
         const res = await _rpc.call('sessions.create', { agentId: params.agentId });
         UI.toast(
-          createdAgent ? `Created agent "${params.agentId}" and started chat` : 'Session created',
+          createdAgent
+            ? I18n.t('sessions.feedback.createdAgentAndSession', { agentId: params.agentId })
+            : I18n.t('sessions.feedback.sessionCreated'),
           'ok'
         );
         _close();
@@ -698,10 +717,10 @@ const SessionsView = (() => {
       } catch (err) {
         const code = err?.code || '';
         const msg = err?.message || String(err);
-        let friendly = 'Failed to start chat: ' + msg;
-        if (code === 'UNAUTHORIZED' && createPending) friendly = 'This connection does not have permission to create agents.';
-        if (code === 'agent.not_found') friendly = `Agent "${params.agentId}" doesn't exist. Type a new ID and pick "Create new agent" from the dropdown.`;
-        if (code === 'agent.exists') friendly = `Agent "${params.agentId}" already exists — pick it from the list instead.`;
+        let friendly = I18n.t('sessions.errors.startFailed', { error: msg });
+        if (code === 'UNAUTHORIZED' && createPending) friendly = I18n.t('sessions.errors.createUnauthorized');
+        if (code === 'agent.not_found') friendly = I18n.t('sessions.errors.agentMissing', { agentId: params.agentId });
+        if (code === 'agent.exists') friendly = I18n.t('sessions.errors.agentExists', { agentId: params.agentId });
         _showError(friendly);
         submitBtn.textContent = prevLabel;
         submitBtn.disabled = false;
@@ -762,13 +781,24 @@ const SessionsView = (() => {
 
   function _runStatusLabel(status) {
     return {
-      queued: 'Task queued',
-      running: 'Task running',
-      interrupted: 'Interrupted',
-      failed: 'Last task failed',
-      timeout: 'Last task timed out',
-      cancelled: 'Last task cancelled',
+      queued: I18n.t('sessions.run.queued'),
+      running: I18n.t('sessions.run.running'),
+      interrupted: I18n.t('sessions.run.interrupted'),
+      failed: I18n.t('sessions.run.failed'),
+      timeout: I18n.t('sessions.run.timeout'),
+      cancelled: I18n.t('sessions.run.cancelled'),
     }[status] || '';
+  }
+
+  function _sessionStatusLabel(status) {
+    const key = String(status || '').toLowerCase();
+    return {
+      running: I18n.t('sessions.status.running'),
+      done: I18n.t('sessions.status.done'),
+      failed: I18n.t('sessions.status.failed'),
+      killed: I18n.t('sessions.status.killed'),
+      timeout: I18n.t('sessions.status.timeout'),
+    }[key] || (status ? String(status) : I18n.t('sessions.status.unknown'));
   }
 
   function _runStatusChipClass(status) {
@@ -816,9 +846,9 @@ const SessionsView = (() => {
       </div>`;
     }
     return `<div class="sess-key__sub">
-      <span class="sess-key__agent sess-key__agent--orphan" title="Agent '${_esc(agentId)}' is no longer registered">
+      <span class="sess-key__agent sess-key__agent--orphan" title="${_escAttr(I18n.t('sessions.agent.orphanedTitle', { agentId }))}">
         ${_esc(agentId)}
-        <span class="chip chip-warn">⚠ Orphaned</span>
+        <span class="chip chip-warn">⚠ ${_esc(I18n.t('sessions.agent.orphaned'))}</span>
       </span>
     </div>`;
   }
@@ -839,6 +869,10 @@ const SessionsView = (() => {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  function _escAttr(s) {
+    return _esc(s).replace(/'/g, '&#39;');
   }
 
   return { render, destroy };
