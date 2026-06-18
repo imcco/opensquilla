@@ -90,6 +90,10 @@ def test_chat_secondary_feedback_and_queue_controls_use_i18n() -> None:
         "I18n.t('chat.subagents.completion')",
         "I18n.t('chat.pending.label'",
         "I18n.t('chat.pending.clearAll')",
+        "I18n.t('chat.errors.generic'",
+        "I18n.t('chat.errors.resetFailed'",
+        "I18n.t('chat.errors.usageFailed'",
+        "I18n.t('chat.errors.compactionFailed'",
     ]:
         assert call in source
 
@@ -920,7 +924,7 @@ def test_chat_usage_slash_status_reads_top_level_and_totals_fields() -> None:
     source = CHAT_JS.read_text(encoding="utf-8")
     select_start = source.index("function _selectSlashCmd(cmd, args = '')")
     usage_start = source.index("case 'usage_status':", select_start)
-    usage_end = source.index("          .catch((err) => UI.toast('Usage failed:", usage_start)
+    usage_end = source.index("          .catch((err) => UI.toast(I18n.t('chat.errors.usageFailed'", usage_start)
     usage_block = source[usage_start:usage_end]
 
     for field_name in (
@@ -2988,7 +2992,7 @@ def test_chat_replayed_compaction_terminal_restores_separator_without_toast() ->
     assert "const isReplay = !!(meta && meta.replayed);" in body
     assert "if (isReplay && !_compactionTerminalStatus(status)) return;" in body
     assert "if (meta && meta.replayed) return;" not in body
-    assert "if (!isReplay) UI.toast('Compact failed'" in body
+    assert "if (!isReplay) UI.toast(I18n.t('chat.errors.compactionFailed'" in body
     assert "if (!isReplay) {\n        UI.toast(\n          'Compact cancelled'" in body
 
 

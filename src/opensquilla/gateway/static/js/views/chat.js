@@ -1416,7 +1416,7 @@ const ChatView = (() => {
           routerToggle.checked = !enabled;
           if (!previousRouterFeatureEnabled) _clearRouterFxVisuals('router_patch_reverted');
           else _scheduleHistorySync();
-          UI.toast('Failed: ' + e.message, 'err');
+          UI.toast(I18n.t('chat.errors.generic', { error: e.message }), 'err');
         }
       });
     }
@@ -2332,7 +2332,7 @@ const ChatView = (() => {
       _elevatedPill.title =
         'Global permission default controls execution mode and is configured by opensquilla sandbox on|bypass|full|reset.';
     } else {
-      _elevatedPill.textContent = 'Approval prompts';
+      _elevatedPill.textContent = I18n.t('chat.permissions.prompts');
       _elevatedPill.title =
         'Approval prompts are active. Click to enable approval bypass for this browser session.';
     }
@@ -2729,7 +2729,7 @@ const ChatView = (() => {
             _thread.innerHTML = _emptyStateHTML();
             UI.toast(I18n.t('chat.feedback.sessionReset'), 'info');
           })
-          .catch((err) => UI.toast('Reset failed: ' + err.message, 'err'));
+          .catch((err) => UI.toast(I18n.t('chat.errors.resetFailed', { error: err.message }), 'err'));
         break;
       case 'compact_context':
       case 'sessions.contextCompact':
@@ -2780,7 +2780,7 @@ const ChatView = (() => {
               'info'
             );
           })
-          .catch((err) => UI.toast('Usage failed: ' + err.message, 'err'));
+          .catch((err) => UI.toast(I18n.t('chat.errors.usageFailed', { error: err.message }), 'err'));
         break;
       }
     }
@@ -3292,7 +3292,10 @@ const ChatView = (() => {
         ? '; pending message preserved'
         : (recovered ? '; pending message recovered to input' : '');
       _syncCompactionSeparator(payload || {}, status, source, { label: 'compaction failed' });
-      if (!isReplay) UI.toast('Compact failed' + msg + pendingSuffix, 'err', 5000);
+      if (!isReplay) UI.toast(I18n.t('chat.errors.compactionFailed', {
+        detail: msg,
+        pending: pendingSuffix,
+      }), 'err', 5000);
       return;
     }
     if (status === 'cancelled') {
