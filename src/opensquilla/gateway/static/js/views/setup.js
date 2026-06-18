@@ -70,20 +70,20 @@ const SetupView = (() => {
       <section class="setup">
         <header class="setup__head">
           <div>
-            <p class="setup__kicker">OpenSquilla setup</p>
-            <h2>${setupAction ? 'Action needed' : 'Ready to run'}</h2>
+            <p class="setup__kicker">${I18n.t('setup.kicker')}</p>
+            <h2>${setupAction ? I18n.t('setup.actionNeeded') : I18n.t('setup.readyToRun')}</h2>
           </div>
           <div class="setup__head-aside">
-            <button type="button" class="setup__exit" data-exit-setup aria-label="Exit setup and return to Overview">
-              <span aria-hidden="true">←</span><span>Exit setup</span>
+            <button type="button" class="setup__exit" data-exit-setup aria-label="${I18n.t('setup.exitAria')}">
+              <span aria-hidden="true">←</span><span>${I18n.t('setup.exit')}</span>
             </button>
             <div class="setup__status ${setupAction ? 'is-warn' : 'is-ok'}">
-              ${setupAction ? 'Action needed' : 'Ready'}
+              ${setupAction ? I18n.t('setup.actionNeeded') : I18n.t('setup.status.ready')}
             </div>
             ${_renderOnboardingReasons()}
           </div>
         </header>
-        <nav class="setup-stepper" aria-label="Setup steps">
+        <nav class="setup-stepper" aria-label="${I18n.t('setup.steps.aria')}">
           ${STEPS.map(_renderStepButton).join('')}
         </nav>
         <div class="setup__body">${_renderCurrentStep()}</div>

@@ -114,30 +114,30 @@ const ConfigView = (() => {
       <div class="cfg-stage">
         <header class="cfg-stage__header">
           <div class="cfg-stage__title-block">
-            <span class="cfg-stage__eyebrow">Settings</span>
-            <h2 class="cfg-stage__title">Config</h2>
-            <p class="cfg-stage__subtitle">Advanced gateway configuration. Use guided setup for provider, router, channels, and extras.</p>
+            <span class="cfg-stage__eyebrow">${I18n.t('config.eyebrow')}</span>
+            <h2 class="cfg-stage__title">${I18n.t('config.title')}</h2>
+            <p class="cfg-stage__subtitle">${I18n.t('config.subtitle')}</p>
           </div>
           <div class="cfg-stage__actions mobile-action-strip">
-            <div class="cfg-mode-toggle mobile-action-strip__item" role="group" aria-label="Editor mode">
-              <button class="cfg-mode-btn ${_mode === 'form' ? 'is-active' : ''}" type="button" data-cfg-mode="form" aria-pressed="${_mode === 'form' ? 'true' : 'false'}">Form</button>
-              <button class="cfg-mode-btn ${_mode === 'yaml' ? 'is-active' : ''}" type="button" data-cfg-mode="yaml" aria-pressed="${_mode === 'yaml' ? 'true' : 'false'}">YAML</button>
+            <div class="cfg-mode-toggle mobile-action-strip__item" role="group" aria-label="${I18n.t('config.mode.editor')}">
+              <button class="cfg-mode-btn ${_mode === 'form' ? 'is-active' : ''}" type="button" data-cfg-mode="form" aria-pressed="${_mode === 'form' ? 'true' : 'false'}">${I18n.t('config.mode.form')}</button>
+              <button class="cfg-mode-btn ${_mode === 'yaml' ? 'is-active' : ''}" type="button" data-cfg-mode="yaml" aria-pressed="${_mode === 'yaml' ? 'true' : 'false'}">${I18n.t('config.mode.yaml')}</button>
             </div>
-            <button class="cfg-btn cfg-btn--ghost mobile-action-strip__button" id="cfg-guided-setup" type="button" title="Open guided setup" aria-label="Open guided setup">${icons.config()}<span class="mobile-action-strip__label">Guided setup</span></button>
-            <button class="cfg-btn cfg-btn--ghost mobile-action-strip__button" id="cfg-reload" type="button" title="Reload config" aria-label="Reload config">${icons.refresh()}<span class="mobile-action-strip__label">Reload</span></button>
-            <button class="cfg-btn cfg-btn--ghost mobile-action-strip__button" id="cfg-save" type="button" title="Save config" aria-label="Save config">${icons.check()}<span class="mobile-action-strip__label">Save</span></button>
+            <button class="cfg-btn cfg-btn--ghost mobile-action-strip__button" id="cfg-guided-setup" type="button" title="${I18n.t('config.actions.guidedSetup')}" aria-label="${I18n.t('config.actions.guidedSetup')}">${icons.config()}<span class="mobile-action-strip__label">${I18n.t('config.actions.guidedSetup')}</span></button>
+            <button class="cfg-btn cfg-btn--ghost mobile-action-strip__button" id="cfg-reload" type="button" title="${I18n.t('config.actions.reload')}" aria-label="${I18n.t('config.actions.reload')}">${icons.refresh()}<span class="mobile-action-strip__label">${I18n.t('config.actions.reload')}</span></button>
+            <button class="cfg-btn cfg-btn--ghost mobile-action-strip__button" id="cfg-save" type="button" title="${I18n.t('config.actions.save')}" aria-label="${I18n.t('config.actions.save')}">${icons.check()}<span class="mobile-action-strip__label">${I18n.t('config.actions.save')}</span></button>
           </div>
         </header>
 
         <!-- Form view -->
         <div id="cfg-form-view">
           <div class="cfg-toolbar">
-            <div class="cfg-tabs" id="cfg-tab-bar" role="tablist" aria-label="Config sections">
+            <div class="cfg-tabs" id="cfg-tab-bar" role="tablist" aria-label="${I18n.t('config.sections')}">
               ${_TABS.map(t => `<button id="cfg-tab-btn-${t.id}" class="cfg-tab${t.id === _activeTab ? ' is-active' : ''}" type="button" role="tab" aria-selected="${t.id === _activeTab ? 'true' : 'false'}" aria-controls="cfg-tab-${t.id}" tabindex="${t.id === _activeTab ? '0' : '-1'}" data-tab="${t.id}">${_esc(t.label)}</button>`).join('')}
             </div>
             <label class="cfg-search-wrap" for="cfg-search">
               <span class="cfg-search-icon" aria-hidden="true">${icons.search()}</span>
-              <input class="cfg-search-input" id="cfg-search" type="search" placeholder="Search keys & values…" value="${_esc(_searchText)}" autocomplete="off">
+              <input class="cfg-search-input" id="cfg-search" type="search" placeholder="${I18n.t('config.search.placeholder')}" value="${_esc(_searchText)}" autocomplete="off">
             </label>
           </div>
           ${_TABS.map(t => `<div id="cfg-tab-${t.id}" class="tab-panel" role="tabpanel" aria-labelledby="cfg-tab-btn-${t.id}" tabindex="0" style="${t.id === _activeTab ? '' : 'display:none'}"></div>`).join('')}
@@ -154,15 +154,15 @@ const ConfigView = (() => {
         <div id="cfg-stickybar" class="cfg-stickybar" hidden aria-live="polite">
           <div class="cfg-stickybar__row">
             <span class="cfg-stickybar__pulse" aria-hidden="true"></span>
-            <span class="cfg-stickybar__count"><strong id="cfg-stickybar-count">0</strong> changes pending</span>
+            <span class="cfg-stickybar__count">${I18n.t('config.pendingChanges', { count: '<strong id="cfg-stickybar-count">0</strong>' })}</span>
             <span class="cfg-stickybar__sep" aria-hidden="true">·</span>
             <button class="cfg-stickybar__diff-toggle" id="cfg-stickybar-toggle" type="button" aria-expanded="false" aria-controls="cfg-stickybar-diff">
-              <span>View diff</span>
+              <span>${I18n.t('config.viewDiff')}</span>
               <span class="cfg-stickybar__chevron" aria-hidden="true">${_CHEVRON_SVG}</span>
             </button>
             <span class="cfg-stickybar__spacer"></span>
-            <button class="cfg-btn cfg-btn--ghost cfg-stickybar__btn" id="cfg-stickybar-discard" type="button">Discard</button>
-            <button class="cfg-btn cfg-btn--primary cfg-stickybar__btn" id="cfg-stickybar-save" type="button">${icons.check()}<span>Save</span></button>
+            <button class="cfg-btn cfg-btn--ghost cfg-stickybar__btn" id="cfg-stickybar-discard" type="button">${I18n.t('config.discard')}</button>
+            <button class="cfg-btn cfg-btn--primary cfg-stickybar__btn" id="cfg-stickybar-save" type="button">${icons.check()}<span>${I18n.t('config.actions.save')}</span></button>
           </div>
           <div class="cfg-stickybar__diff" id="cfg-stickybar-diff" hidden></div>
         </div>

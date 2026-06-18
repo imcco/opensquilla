@@ -18,6 +18,10 @@ const Router = (() => {
     _resolve();
   }
 
+  function setContentElement(contentEl) {
+    _contentEl = contentEl;
+  }
+
   function navigate(path) {
     const [pathPart, queryPart] = path.split('?');
     const full = _basePath + pathPart + (queryPart ? '?' + queryPart : '');
@@ -51,7 +55,7 @@ const Router = (() => {
         const div = document.createElement('div');
         div.style.padding = '2rem';
         div.style.color = 'var(--text-muted)';
-        div.textContent = 'Page not found: ' + rel;
+        div.textContent = I18n.t('route.notFound', { path: rel });
         _contentEl.appendChild(div);
       }
     }
@@ -65,15 +69,28 @@ const Router = (() => {
       else el.removeAttribute('aria-current');
     });
 
-    const title = route?.meta?.title || 'Not Found';
+    const title = _routeTitle(route);
     const titleEl = document.getElementById('topbar-title');
     if (titleEl) titleEl.dataset.pageTitle = title;
-    document.title = title === 'OpenSquilla' ? 'OpenSquilla Control' : `${title} - OpenSquilla Control`;
+    document.title = title === 'OpenSquilla' ? I18n.t('app.name') : `${title} - ${I18n.t('app.name')}`;
+  }
+
+  function _routeTitle(route) {
+    if (!route) return I18n.t('route.notFound');
+    if (route.meta?.titleKey) return I18n.t(route.meta.titleKey);
+    return route.meta?.title || I18n.t('route.notFound');
+  }
+
+  function refresh() {
+    const current = _currentPath;
+    _currentPath = '';
+    _resolve();
+    if (!current && !_currentPath) _resolve();
   }
 
   function currentPath() { return _currentPath.split('?')[0]; }
 
-  return { register, init, navigate, currentPath };
+  return { register, init, navigate, refresh, setContentElement, currentPath };
 })();
 
 window.Router = Router;

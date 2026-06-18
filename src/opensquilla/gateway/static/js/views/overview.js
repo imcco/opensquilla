@@ -32,16 +32,16 @@ const OverviewView = (() => {
       <div class="ov-stage">
         <header class="ov-stage__header">
           <div class="ov-stage__title-block">
-            <span class="ov-stage__eyebrow">Control · Overview</span>
-            <h2 class="ov-stage__title">OpenSquilla</h2>
-            <p class="ov-stage__subtitle">Live status, recent sessions, and the live event stream.</p>
+            <span class="ov-stage__eyebrow">${I18n.t('overview.eyebrow')}</span>
+            <h2 class="ov-stage__title">${I18n.t('overview.title')}</h2>
+            <p class="ov-stage__subtitle">${I18n.t('overview.subtitle')}</p>
           </div>
           <div class="ov-stage__actions">
-            <button class="btn btn--ghost" id="ov-refresh" title="Refresh">
-              ${icons.refresh()}<span>Refresh</span>
+            <button class="btn btn--ghost" id="ov-refresh" title="${I18n.t('overview.actions.refresh')}">
+              ${icons.refresh()}<span>${I18n.t('overview.actions.refresh')}</span>
             </button>
-            <button class="btn btn--primary" id="ov-go-chat" title="Open chat">
-              ${icons.chat()}<span>Open chat</span>
+            <button class="btn btn--primary" id="ov-go-chat" title="${I18n.t('overview.actions.openChat')}">
+              ${icons.chat()}<span>${I18n.t('overview.actions.openChat')}</span>
             </button>
           </div>
         </header>
@@ -49,31 +49,31 @@ const OverviewView = (() => {
         <section class="ov-stats">
           <button class="ov-stat ov-stat--accent" data-nav="/usage" type="button">
             <div class="ov-stat__icon">${icons.usage()}</div>
-            <div class="ov-stat__label">Total tokens</div>
+            <div class="ov-stat__label">${I18n.t('overview.stats.totalTokens')}</div>
             <div class="ov-stat__value" id="ov-tokens">${UI.skeleton('120px', '1.6rem')}</div>
             <div class="ov-stat__hint" id="ov-cost-line">—</div>
           </button>
           <button class="ov-stat" data-nav="/sessions" type="button" title="Total sessions across all statuses">
             <div class="ov-stat__icon">${icons.sessions()}</div>
-            <div class="ov-stat__label">Total sessions</div>
+            <div class="ov-stat__label">${I18n.t('overview.stats.totalSessions')}</div>
             <div class="ov-stat__value" id="ov-sessions">${UI.skeleton('80px', '1.6rem')}</div>
-            <div class="ov-stat__hint">view all →</div>
+            <div class="ov-stat__hint">${I18n.t('overview.hints.viewAll')}</div>
           </button>
           <button class="ov-stat" data-nav="/agents" type="button">
             <div class="ov-stat__icon">${icons.agents()}</div>
-            <div class="ov-stat__label">Provider</div>
+            <div class="ov-stat__label">${I18n.t('overview.stats.provider')}</div>
             <div class="ov-stat__value ov-stat__value--mono" id="ov-provider">${UI.skeleton('100px', '1.4rem')}</div>
-            <div class="ov-stat__hint">manage agents →</div>
+            <div class="ov-stat__hint">${I18n.t('overview.hints.manageAgents')}</div>
           </button>
           <button class="ov-stat" data-nav="/health" type="button" id="ov-health">
             <div class="ov-stat__icon">${icons.logs()}</div>
-            <div class="ov-stat__label">Health</div>
+            <div class="ov-stat__label">${I18n.t('overview.stats.health')}</div>
             <div class="ov-stat__value ov-stat__value--status" id="ov-health-status">${UI.skeleton('90px', '1.4rem')}</div>
             <div class="ov-stat__hint" id="ov-health-summary">doctor.status</div>
           </button>
           <div class="ov-stat ov-stat--static">
             <div class="ov-stat__icon">${icons.cron()}</div>
-            <div class="ov-stat__label">Uptime</div>
+            <div class="ov-stat__label">${I18n.t('overview.stats.uptime')}</div>
             <div class="ov-stat__value ov-stat__value--mono" id="ov-uptime">${UI.skeleton('120px', '1.6rem')}</div>
             <div class="ov-stat__hint" id="ov-version-line">—</div>
           </div>
@@ -83,10 +83,10 @@ const OverviewView = (() => {
           <section class="ov-panel ov-panel--span2">
             <div class="ov-panel__head">
               <div>
-                <span class="ov-panel__eyebrow">Recent activity</span>
-                <h3 class="ov-panel__title">Sessions</h3>
+                <span class="ov-panel__eyebrow">${I18n.t('overview.panels.recentActivity')}</span>
+                <h3 class="ov-panel__title">${I18n.t('overview.panels.sessions')}</h3>
               </div>
-              <button class="ov-link" id="ov-sessions-all" type="button">View all →</button>
+              <button class="ov-link" id="ov-sessions-all" type="button">${I18n.t('overview.hints.viewAll')}</button>
             </div>
             <div class="ov-recent" id="ov-recent-sessions">${UI.skeleton('100%', '4rem')}</div>
           </section>
@@ -94,23 +94,23 @@ const OverviewView = (() => {
           <section class="ov-panel">
             <div class="ov-panel__head">
               <div>
-                <span class="ov-panel__eyebrow">Connection</span>
-                <h3 class="ov-panel__title">Gateway</h3>
+                <span class="ov-panel__eyebrow">${I18n.t('overview.panels.connection')}</span>
+                <h3 class="ov-panel__title">${I18n.t('overview.panels.gateway')}</h3>
               </div>
               <span class="conn-pill" id="ov-conn-pill">—</span>
             </div>
             <div class="ov-form">
               <label class="ov-field">
-                <span class="ov-field__label">WebSocket URL</span>
+                <span class="ov-field__label">${I18n.t('overview.connection.websocketUrl')}</span>
                 <input id="ov-ws-url" class="ov-field__input ov-field__input--mono" type="text" placeholder="ws://…" value="${_esc(url)}" autocomplete="off" />
               </label>
               <label class="ov-field">
-                <span class="ov-field__label">Token <span class="ov-field__optional">optional</span></span>
+                <span class="ov-field__label">${I18n.t('overview.connection.token')} <span class="ov-field__optional">${I18n.t('overview.connection.optional')}</span></span>
                 <input id="ov-ws-token" class="ov-field__input" type="password" placeholder="—" value="${_esc(token)}" autocomplete="off" />
               </label>
               <div class="ov-form__actions">
-                <button class="btn btn--primary btn--sm" id="ov-connect">Connect</button>
-                <button class="btn btn--ghost btn--sm" id="ov-disconnect">Disconnect</button>
+                <button class="btn btn--primary btn--sm" id="ov-connect">${I18n.t('overview.connection.connect')}</button>
+                <button class="btn btn--ghost btn--sm" id="ov-disconnect">${I18n.t('overview.connection.disconnect')}</button>
               </div>
             </div>
           </section>
@@ -118,15 +118,15 @@ const OverviewView = (() => {
           <section class="ov-panel ov-panel--span3">
             <div class="ov-panel__head">
               <div>
-                <span class="ov-panel__eyebrow">Live</span>
-                <h3 class="ov-panel__title">Event stream</h3>
+                <span class="ov-panel__eyebrow">${I18n.t('overview.panels.live')}</span>
+                <h3 class="ov-panel__title">${I18n.t('overview.panels.eventStream')}</h3>
               </div>
-              <span class="ov-panel__meta" id="ov-event-count">0 events</span>
+              <span class="ov-panel__meta" id="ov-event-count">${I18n.t('overview.events.count', { count: 0 })}</span>
             </div>
             <div class="ov-event-log" id="ov-event-log">
               <div class="ov-event-log__empty">
                 <span class="ov-event-log__pulse"></span>
-                Listening for events…
+                ${I18n.t('overview.events.listening')}
               </div>
             </div>
           </section>
@@ -342,11 +342,11 @@ const OverviewView = (() => {
     const container = _el && _el.querySelector('#ov-event-log');
     const counter = _el && _el.querySelector('#ov-event-count');
     if (!container) return;
-    if (counter) counter.textContent = `${_eventLog.length} event${_eventLog.length === 1 ? '' : 's'}`;
+    if (counter) counter.textContent = I18n.t('overview.events.count', { count: _eventLog.length });
     if (_eventLog.length === 0) {
       container.innerHTML = `<div class="ov-event-log__empty">
         <span class="ov-event-log__pulse"></span>
-        Listening for events…
+        ${I18n.t('overview.events.listening')}
       </div>`;
       return;
     }

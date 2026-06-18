@@ -112,7 +112,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--sp-4);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 .card-title {
   font-size: var(--fs-sm);
@@ -257,6 +257,31 @@
   color: var(--warn);
   border-color: color-mix(in srgb, var(--warn) 35%, var(--border));
   background: color-mix(in srgb, var(--warn) 10%, var(--bg-elevated));
+}
+
+.locale-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+.locale-select {
+  min-height: 34px;
+  max-width: 132px;
+  padding: 0 28px 0 var(--sp-3);
+  border-radius: var(--radius-md);
+  border-color: transparent;
+  background-color: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.locale-select:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+.locale-select:focus {
+  border-color: var(--accent);
 }
 /* Reconnecting (warn) pulses faster — signals "actively trying". */
 .conn-pill.warn::before {

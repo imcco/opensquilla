@@ -4,6 +4,7 @@ from pathlib import Path
 
 LOGS_JS = Path("src/opensquilla/gateway/static/js/views/logs.js")
 LOGS_CSS = Path("src/opensquilla/gateway/static/css/views/logs.css")
+LOCALE_EN = Path("src/opensquilla/gateway/static/js/locales/en.js")
 CONFIG_JS = Path("src/opensquilla/gateway/static/js/views/config.js")
 CONFIG_CSS = Path("src/opensquilla/gateway/static/css/views/config.css")
 CONFIG_EXAMPLE = Path("opensquilla.toml.example")
@@ -11,13 +12,50 @@ CONFIG_EXAMPLE = Path("opensquilla.toml.example")
 
 def test_logs_view_describes_configurable_debug_logging() -> None:
     source = LOGS_JS.read_text(encoding="utf-8")
+    locale = LOCALE_EN.read_text(encoding="utf-8")
 
-    assert "Gateway file logging is configurable" in source
+    assert "Gateway file logging is configurable" in locale
     assert "logs.status" in source
-    assert "Raw turn-call capture is enabled by" in source
-    assert "opensquilla diagnostics on --raw" in source
-    assert "OPENSQUILLA_LOG_DIR" in source
-    assert "OPENSQUILLA_TURN_CALL_LOG=1" in source
+    assert "Raw turn-call capture is enabled by" in locale
+    assert "opensquilla diagnostics on --raw" in locale
+    assert "OPENSQUILLA_LOG_DIR" in locale
+    assert "OPENSQUILLA_TURN_CALL_LOG=1" in locale
+
+
+def test_logs_view_localizes_status_stats_and_empty_states() -> None:
+    source = LOGS_JS.read_text(encoding="utf-8")
+
+    required_keys = [
+        "logs.status.unavailable",
+        "logs.status.fileLog",
+        "logs.status.rawTurnCall",
+        "logs.status.diagnostics",
+        "logs.stats.inView",
+        "logs.stats.loaded",
+        "logs.stats.errors",
+        "logs.stats.reviewNeeded",
+        "logs.stats.warnings",
+        "logs.stats.infoDebug",
+        "logs.empty.noLogs",
+        "logs.empty.noMatches",
+        "logs.errors.refreshFailed",
+    ]
+    for key in required_keys:
+        assert f"I18n.t('{key}'" in source
+
+    assert "Log status unavailable" not in source
+    assert "<div class=\"stat-label\">In view</div>" not in source
+    assert "No logs yet." not in source
+
+
+def test_logs_string_entries_parse_timestamp_and_bracket_level() -> None:
+    source = LOGS_JS.read_text(encoding="utf-8")
+
+    assert "function _normalizeLogEntry(entry)" in source
+    assert "_normalizeLogEntry(entry)" in source
+    assert "String(line).match" in source
+    assert "bracketLevel" in source
+    assert "ts: match.groups.ts" in source
 
 
 def test_config_view_explains_debug_file_logging_fields() -> None:
@@ -77,6 +115,27 @@ def test_logs_mobile_toolbar_keeps_level_filters_compact() -> None:
     assert "width: 100%" in mobile_block
     assert "min-width: 0" in mobile_block
     assert ".lg-toggle { width: 100%; min-height: 40px; }" in mobile_block
+
+
+def test_logs_level_filters_use_quiet_professional_chips() -> None:
+    css = LOGS_CSS.read_text(encoding="utf-8")
+
+    button_start = css.index(".lg-level-btn {")
+    button_rule = css[button_start : css.index("}", button_start)]
+    active_start = css.index(".lg-level-btn.is-active {")
+    active_rule = css[active_start : css.index("}", active_start)]
+
+    assert "border-radius: var(--radius-md)" in button_rule
+    assert "border-radius: 999px" not in button_rule
+    assert "background: color-mix(in srgb, var(--bg-surface) 88%, var(--bg))" in button_rule
+    assert "box-shadow: inset 0 0 0 1px" in button_rule
+    assert "letter-spacing: 0.04em" in button_rule
+    assert "currentColor 14%" not in active_rule
+    assert "background: color-mix(in srgb, currentColor 5%, var(--bg))" in active_rule
+    assert "border-color: color-mix(in srgb, currentColor 28%, var(--border))" in active_rule
+    assert ".lg-level-btn--error.is-active" not in css
+    assert ".lg-level-btn--warn.is-active" not in css
+    assert ".lg-level-btn--info.is-active" not in css
 
 
 def test_logs_auto_follow_toggle_keeps_touch_friendly_hit_area() -> None:
@@ -175,7 +234,7 @@ def test_logs_poll_does_not_overlap_or_fail_silently() -> None:
 
     assert "if (!_el || _pollInFlight) return;" in body
     assert "_pollInFlight = true;" in body
-    assert "Log refresh failed" in body
+    assert "I18n.t('logs.errors.refreshFailed'" in body
     assert "_pollErrorShown = true;" in body
     assert "_pollInFlight = false;" in body
     assert "finally" in body

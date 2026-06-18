@@ -58,16 +58,16 @@ const LogsView = (() => {
       <div class="lg-stage">
         <header class="lg-stage__header">
           <div class="lg-stage__title-block">
-            <span class="lg-stage__eyebrow">Control · Logs</span>
-            <h2 class="lg-stage__title">Logs</h2>
-            <p class="lg-stage__subtitle">Live gateway log stream — filter, follow, and export.</p>
+            <span class="lg-stage__eyebrow">${I18n.t('logs.eyebrow')}</span>
+            <h2 class="lg-stage__title">${I18n.t('logs.title')}</h2>
+            <p class="lg-stage__subtitle">${I18n.t('logs.subtitle')}</p>
           </div>
           <div class="lg-stage__actions">
             <div class="lg-status-pills" id="logs-status-pills">
-              <span class="lg-pill lg-pill--warn" title="Log status is loaded through the read-only logs.status RPC.">Log status loading</span>
+              <span class="lg-pill lg-pill--warn" title="logs.status">${I18n.t('logs.status.loading')}</span>
             </div>
-            <button class="btn btn--ghost" id="logs-export" title="Download filtered log lines">
-              ${icons.download()}<span>Export</span>
+            <button class="btn btn--ghost" id="logs-export" title="${I18n.t('logs.actions.export')}">
+              ${icons.download()}<span>${I18n.t('logs.actions.export')}</span>
             </button>
           </div>
         </header>
@@ -76,17 +76,17 @@ const LogsView = (() => {
 
         <section class="lg-toolbar">
           <div class="lg-levels">
-            <span class="lg-toolbar__label">Levels</span>
+            <span class="lg-toolbar__label">${I18n.t('logs.levels')}</span>
             <div class="lg-levels__row" id="logs-level-chips">${levelChips}</div>
           </div>
           <div class="lg-search-wrap">
             <span class="lg-search-icon">${icons.search()}</span>
-            <input class="lg-search-input" type="search" id="logs-search" aria-label="Filter log messages" placeholder="Filter messages…" autocomplete="off" />
+            <input class="lg-search-input" type="search" id="logs-search" aria-label="${I18n.t('logs.search.aria')}" placeholder="${I18n.t('logs.search.placeholder')}" autocomplete="off" />
           </div>
           <label class="lg-toggle">
             <input type="checkbox" id="logs-auto-follow" checked />
             <span class="lg-toggle__track"><span class="lg-toggle__thumb"></span></span>
-            <span class="lg-toggle__label">Auto-follow</span>
+            <span class="lg-toggle__label">${I18n.t('logs.autoFollow')}</span>
           </label>
         </section>
 
@@ -94,7 +94,7 @@ const LogsView = (() => {
           <div id="logs-display" class="lg-display" role="log" aria-live="polite" aria-relevant="additions text">
             <div class="lg-display__placeholder">
               <span class="lg-spinner"></span>
-              Loading logs…
+              ${I18n.t('logs.loading')}
             </div>
           </div>
         </section>
@@ -187,16 +187,7 @@ const LogsView = (() => {
           _cursor += lines.length;
         }
         lines.forEach(entry => {
-          if (typeof entry === 'string') {
-            _allLines.push({ level: _guessLevel(entry), message: entry, raw: entry });
-          } else {
-            _allLines.push({
-              level: (entry.level || entry.lvl || 'INFO').toUpperCase(),
-              message: entry.message || entry.msg || JSON.stringify(entry),
-              ts: entry.timestamp || entry.ts || null,
-              raw: typeof entry.raw === 'string' ? entry.raw : JSON.stringify(entry),
-            });
-          }
+          _allLines.push(_normalizeLogEntry(entry));
         });
         if (_allLines.length > 2000) _allLines = _allLines.slice(_allLines.length - 2000);
         _renderStats();
@@ -208,7 +199,7 @@ const LogsView = (() => {
       _pollErrorShown = false;
     } catch (err) {
       if (!_pollErrorShown) {
-        UI.toast('Log refresh failed: ' + (err?.message || 'unknown error'), 'warn');
+        UI.toast(I18n.t('logs.errors.refreshFailed', { error: err?.message || I18n.t('common.unknownError') }), 'warn');
         _pollErrorShown = true;
       }
     } finally {
@@ -216,9 +207,42 @@ const LogsView = (() => {
     }
   }
 
+  function _normalizeLogEntry(entry) {
+    if (typeof entry === 'string') {
+      const line = String(entry);
+      const match = String(line).match(/^(?<ts>\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:[,.]\d{1,6})?)\s+\[(?<bracketLevel>TRACE|DEBUG|INFO|WARNING|WARN|ERROR|CRITICAL|FATAL)\]\s*(?<message>.*)$/i);
+      if (match?.groups) {
+        const bracketLevel = match.groups.bracketLevel.toUpperCase();
+        return {
+          level: _normalizeLevel(bracketLevel),
+          message: match.groups.message || line,
+          ts: match.groups.ts,
+          raw: line,
+        };
+      }
+      return { level: _guessLevel(line), message: line, raw: line };
+    }
+    return {
+      level: _normalizeLevel(entry.level || entry.lvl || 'INFO'),
+      message: entry.message || entry.msg || JSON.stringify(entry),
+      ts: entry.timestamp || entry.ts || null,
+      raw: typeof entry.raw === 'string' ? entry.raw : JSON.stringify(entry),
+    };
+  }
+
+  function _normalizeLevel(level) {
+    const normalized = String(level || 'INFO').toUpperCase();
+    if (normalized === 'WARNING') return 'WARN';
+    if (normalized === 'CRITICAL' || normalized === 'FATAL') return 'ERROR';
+    if (_LEVELS.includes(normalized)) return normalized;
+    return 'INFO';
+  }
+
   function _guessLevel(line) {
     const u = line.toUpperCase();
-    if (u.includes('ERROR')) return 'ERROR';
+    const bracket = u.match(/\[(TRACE|DEBUG|INFO|WARNING|WARN|ERROR|CRITICAL|FATAL)\]/);
+    if (bracket) return _normalizeLevel(bracket[1]);
+    if (u.includes('CRITICAL') || u.includes('FATAL') || u.includes('ERROR')) return 'ERROR';
     if (u.includes('WARN')) return 'WARN';
     if (u.includes('INFO')) return 'INFO';
     if (u.includes('DEBUG')) return 'DEBUG';
@@ -238,24 +262,24 @@ const LogsView = (() => {
 
     wrap.innerHTML = `
       <div class="stat stat--hero">
-        <div class="stat-label">In view</div>
+        <div class="stat-label">${I18n.t('logs.stats.inView')}</div>
         <div class="stat-value">${visible.toLocaleString()}</div>
-        <div class="stat-hint">of ${total.toLocaleString()} loaded</div>
+        <div class="stat-hint">${I18n.t('logs.stats.loaded', { total: total.toLocaleString() })}</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Errors</div>
+        <div class="stat-label">${I18n.t('logs.stats.errors')}</div>
         <div class="stat-value">${errors}</div>
-        <div class="stat-hint">${errors ? 'review needed' : 'all clear'}</div>
+        <div class="stat-hint">${errors ? I18n.t('logs.stats.reviewNeeded') : I18n.t('logs.stats.allClear')}</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Warnings</div>
+        <div class="stat-label">${I18n.t('logs.stats.warnings')}</div>
         <div class="stat-value">${warns}</div>
-        <div class="stat-hint">${warns ? 'recent advisories' : 'none'}</div>
+        <div class="stat-hint">${warns ? I18n.t('logs.stats.recentAdvisories') : I18n.t('logs.stats.none')}</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Info / Debug</div>
+        <div class="stat-label">${I18n.t('logs.stats.infoDebug')}</div>
         <div class="stat-value mono">${infos}<span>/</span>${debug}</div>
-        <div class="stat-hint">routine output</div>
+        <div class="stat-hint">${I18n.t('logs.stats.routineOutput')}</div>
       </div>`;
   }
 
@@ -263,7 +287,7 @@ const LogsView = (() => {
     const wrap = _el && _el.querySelector('#logs-status-pills');
     if (!wrap) return;
     if (!_status) {
-      wrap.innerHTML = '<span class="lg-pill lg-pill--warn" title="logs.status is unavailable; log tailing can still work.">Log status unavailable</span>';
+      wrap.innerHTML = `<span class="lg-pill lg-pill--warn" title="${I18n.t('logs.status.unavailableTitle')}">${I18n.t('logs.status.unavailable')}</span>`;
       return;
     }
 
@@ -271,22 +295,22 @@ const LogsView = (() => {
     const rawLog = _status.raw_turn_call_log || {};
     const rawDir = rawLog.directory || {};
     const diagnostics = _status.diagnostics_enabled || {};
-    const fileState = fileLog.enabled ? 'on' : 'off';
-    const rawState = rawLog.enabled ? 'on' : 'off';
+    const fileState = fileLog.enabled ? I18n.t('logs.status.on') : I18n.t('logs.status.off');
+    const rawState = rawLog.enabled ? I18n.t('logs.status.on') : I18n.t('logs.status.off');
     const rawSource = rawLog.source || 'off';
     const filePath = fileLog.path || 'debug.log';
     const rawPath = rawDir.path || '~/.opensquilla/logs';
     const diagnosticsCopy = diagnostics.detail === 'raw'
-      ? 'Diagnostics raw mode is active for future turns. Raw source: ' + rawSource + '.'
-      : 'Standard diagnostics and raw capture are separate levels. Use opensquilla diagnostics on --raw for raw turn-call capture.';
+      ? I18n.t('logs.status.diagnosticsRawTitle', { source: rawSource })
+      : I18n.t('logs.status.diagnosticsStandardTitle');
     const diagnosticsLabel = diagnostics.detail === 'raw'
-      ? 'Diagnostics raw'
-      : (diagnostics.effective ? 'Diagnostics standard' : 'Diagnostics off');
+      ? I18n.t('logs.status.diagnosticsRaw')
+      : (diagnostics.effective ? I18n.t('logs.status.diagnosticsStandard') : I18n.t('logs.status.diagnosticsOff'));
 
     wrap.innerHTML = `
-      <span class="lg-pill ${fileLog.enabled ? '' : 'lg-pill--warn'}" title="Gateway file logging is configurable via log_file_enabled, log_level, rotation settings, and OPENSQUILLA_LOG_DIR. Path: ${_esc(filePath)}.">File log ${fileState}</span>
-      <span class="lg-pill ${rawLog.enabled ? '' : 'lg-pill--warn'}" title="Raw turn-call capture is enabled by OPENSQUILLA_TURN_CALL_LOG=1 or opensquilla diagnostics on --raw. Source: ${_esc(rawSource)}. Directory: ${_esc(rawPath)}.">Raw turn-call ${rawState}</span>
-      <span class="lg-pill lg-pill--warn" title="${_esc(diagnosticsCopy)}">${_esc(diagnosticsLabel)}</span>`;
+      <span class="lg-pill ${fileLog.enabled ? '' : 'lg-pill--warn'}" title="${I18n.t('logs.status.fileLogTitle', { path: _esc(filePath) })}">${I18n.t('logs.status.fileLog', { state: fileState })}</span>
+      <span class="lg-pill ${rawLog.enabled ? '' : 'lg-pill--warn'}" title="${I18n.t('logs.status.rawTurnCallTitle', { source: _esc(rawSource), path: _esc(rawPath) })}">${I18n.t('logs.status.rawTurnCall', { state: rawState })}</span>
+      <span class="lg-pill lg-pill--warn" title="${_esc(diagnosticsCopy)}">${I18n.t('logs.status.diagnostics', { state: diagnosticsLabel })}</span>`;
   }
 
   function _renderLines() {
@@ -300,7 +324,7 @@ const LogsView = (() => {
     });
 
     if (filtered.length === 0) {
-      const msg = _allLines.length === 0 ? 'No logs yet.' : 'No lines match the current filter.';
+      const msg = _allLines.length === 0 ? I18n.t('logs.empty.noLogs') : I18n.t('logs.empty.noMatches');
       display.innerHTML = `<div class="lg-display__placeholder">
         <span class="lg-display__placeholder-icon">${icons.logs()}</span>
         ${msg}

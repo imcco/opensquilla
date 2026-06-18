@@ -82,7 +82,7 @@ const ApprovalMonitor = (() => {
 
       if (pending.length > 0 && pending.length !== _lastToastCount) {
         _lastToastCount = pending.length;
-        UI.toast('Approval required', 'warn', 2500);
+        UI.toast(I18n.t('topbar.approvalRequired'), 'warn', 2500);
       } else if (pending.length === 0) {
         _lastToastCount = 0;
       }
@@ -124,7 +124,9 @@ const ApprovalMonitor = (() => {
 
     const inline = document.getElementById('approval-inline');
     if (!inline) return;
-    const inlineText = count === 1 ? 'Approval required' : `${count} approvals required`;
+    const inlineText = count === 1
+      ? I18n.t('topbar.approvalRequired')
+      : I18n.t('topbar.approvalsRequired', { count });
     inline.textContent = inlineText;
     inline.setAttribute('aria-label', inlineText);
     inline.title = inlineText;

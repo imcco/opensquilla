@@ -10,16 +10,16 @@ const HealthView = (() => {
       <div class="health-layout health-stage">
         <header class="health-stage__header">
           <div class="health-stage__title-block">
-            <span class="health-eyebrow">Control · Health</span>
-            <h2>Health</h2>
-            <p id="health-summary">Checking readiness</p>
+            <span class="health-eyebrow">${I18n.t('health.eyebrow')}</span>
+            <h2>${I18n.t('health.title')}</h2>
+            <p id="health-summary">${I18n.t('health.summary.checking')}</p>
           </div>
-          <button class="btn btn--ghost" id="health-refresh" title="Refresh health report">
-            ${icons.refresh()}<span>Refresh</span>
+          <button class="btn btn--ghost" id="health-refresh" title="${I18n.t('health.actions.refresh')}">
+            ${icons.refresh()}<span>${I18n.t('health.actions.refresh')}</span>
           </button>
         </header>
-        <section class="health-status__rail is-loading" id="health-strip" aria-label="Health summary"></section>
-        <section class="health-findings" id="health-findings" aria-label="Health findings"></section>
+        <section class="health-status__rail is-loading" id="health-strip" aria-label="${I18n.t('health.aria.summary')}"></section>
+        <section class="health-findings" id="health-findings" aria-label="${I18n.t('health.aria.findings')}"></section>
       </div>`;
     el.querySelector('#health-refresh')?.addEventListener('click', _load);
     el.addEventListener('click', _onCommandCopy);
@@ -66,12 +66,12 @@ const HealthView = (() => {
     const summary = _el.querySelector('#health-summary');
     const strip = _el.querySelector('#health-strip');
     const findings = _el.querySelector('#health-findings');
-    if (summary) summary.textContent = 'Checking readiness';
+    if (summary) summary.textContent = I18n.t('health.summary.checking');
     if (strip) {
       strip.className = 'health-status__rail is-loading';
       strip.innerHTML = _renderLoadingStrip();
     }
-    if (findings) findings.innerHTML = '<article class="health-empty">Loading health report</article>';
+    if (findings) findings.innerHTML = `<article class="health-empty">${I18n.t('health.loading.report')}</article>`;
     try {
       await _rpc.waitForConnection();
       const report = await _rpc.call('doctor.status', { agentId: 'main', deep: true });
@@ -118,15 +118,15 @@ const HealthView = (() => {
   function _renderLoadingStrip() {
     return `
       <div class="health-score">
-        <span class="health-score__label">Readiness</span>
+        <span class="health-score__label">${I18n.t('health.score.readiness')}</span>
         <strong>Checking</strong>
-        <span class="health-score__summary">Waiting for doctor.status</span>
+        <span class="health-score__summary">${I18n.t('health.loading.waiting')}</span>
       </div>
       <div class="health-count-grid">
-        ${_countTile('Needs action', 0, 'blocks_ready')}
-        ${_countTile('Degraded', 0, 'degrades')}
-        ${_countTile('Optional', 0, 'optional')}
-        ${_countTile('Ready', 0, 'none')}
+        ${_countTile(I18n.t('health.counts.needsAction'), 0, 'blocks_ready')}
+        ${_countTile(I18n.t('health.counts.degraded'), 0, 'degrades')}
+        ${_countTile(I18n.t('health.counts.optional'), 0, 'optional')}
+        ${_countTile(I18n.t('health.counts.ready'), 0, 'none')}
       </div>`;
   }
 

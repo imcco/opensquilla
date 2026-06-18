@@ -256,9 +256,9 @@ def test_setup_header_tracks_optional_action_required_sections():
 
     assert "function _hasSetupAction()" in txt
     assert "const setupAction = _hasSetupAction();" in draw_body
-    assert "${setupAction ? 'Action needed' : 'Ready to run'}" in draw_body
+    assert "setupAction ? I18n.t('setup.actionNeeded') : I18n.t('setup.readyToRun')" in draw_body
     assert "setup__status ${setupAction ? 'is-warn' : 'is-ok'}" in draw_body
-    assert "${setupAction ? 'Action needed' : 'Ready'}" in draw_body
+    assert "setupAction ? I18n.t('setup.actionNeeded') : I18n.t('setup.status.ready')" in draw_body
     assert "if (!_hasSetupAction()) return [];" in reasons_body
     assert "if (!detail.blocking && !detail.actionRequired)" in reasons_body
 
@@ -1242,7 +1242,7 @@ def test_config_view_exposes_memory_tab_and_restart_notice():
 
 def test_config_view_links_to_guided_setup():
     txt = (VIEWS / "config.js").read_text(encoding="utf-8")
-    assert "Guided setup" in txt
+    assert "I18n.t('config.actions.guidedSetup')" in txt
     assert "Router.navigate('/setup')" in txt
 
 

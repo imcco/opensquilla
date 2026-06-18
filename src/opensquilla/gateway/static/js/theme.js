@@ -43,8 +43,9 @@ const Theme = (() => {
     if (!el) return;
     // icons.moon/sun are internal SVG helpers, not user content
     el.innerHTML = _current === 'dark' ? icons.moon() : icons.sun();
-    el.title = 'Theme: ' + _current;
-    el.setAttribute('aria-label', 'Theme: ' + _current + '. Toggle theme');
+    const current = I18n.t('theme.current', { mode: _current });
+    el.title = current;
+    el.setAttribute('aria-label', current + '. ' + I18n.t('theme.toggle'));
     el.setAttribute('aria-pressed', _current === 'dark' ? 'true' : 'false');
   }
 
