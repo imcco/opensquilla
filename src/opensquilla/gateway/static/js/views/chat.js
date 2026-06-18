@@ -799,18 +799,18 @@ const ChatView = (() => {
   // Pops that assistant bubble and any later turns from DOM + _messages.
   function _regenerateAssistantBubble(bubble) {
     if (_isStreaming) {
-      UI.toast('Wait for the current response to finish', 'warn', 2000);
+      UI.toast(I18n.t('chat.feedback.waitForResponse'), 'warn', 2000);
       return;
     }
     if (!bubble || !_thread) {
-      UI.toast('No response to regenerate', 'info', 2000);
+      UI.toast(I18n.t('chat.feedback.noResponseToRegenerate'), 'info', 2000);
       return;
     }
 
     const assistantBubbles = Array.from(_thread.querySelectorAll(':scope > .msg.assistant'));
     const assistantOrdinal = assistantBubbles.indexOf(bubble);
     if (assistantOrdinal < 0) {
-      UI.toast('No response to regenerate', 'info', 2000);
+      UI.toast(I18n.t('chat.feedback.noResponseToRegenerate'), 'info', 2000);
       return;
     }
 
@@ -825,7 +825,7 @@ const ChatView = (() => {
       }
     }
     if (assistantIdx < 0) {
-      UI.toast('No response to regenerate', 'info', 2000);
+      UI.toast(I18n.t('chat.feedback.noResponseToRegenerate'), 'info', 2000);
       return;
     }
 
@@ -834,7 +834,7 @@ const ChatView = (() => {
       if (_messages[i].role === 'user') { userIdx = i; break; }
     }
     if (userIdx < 0) {
-      UI.toast('No previous message to regenerate', 'info', 2000);
+      UI.toast(I18n.t('chat.feedback.noPreviousMessage'), 'info', 2000);
       return;
     }
 
@@ -866,7 +866,7 @@ const ChatView = (() => {
   // turn was sent.
   function _editUserBubble(bubble) {
     if (!bubble || _isStreaming) {
-      if (_isStreaming) UI.toast('Wait for the current response to finish', 'warn', 2000);
+      if (_isStreaming) UI.toast(I18n.t('chat.feedback.waitForResponse'), 'warn', 2000);
       return;
     }
     const text = _extractBubbleText(bubble);
@@ -931,8 +931,8 @@ const ChatView = (() => {
       if (action === 'copy') {
         const text = _extractBubbleText(bubble);
         _copyTextToClipboard(text)
-          .then(() => UI.toast('Copied', 'info', 1200))
-          .catch((err) => UI.toast('Copy failed: ' + err.message, 'err', 2500));
+          .then(() => UI.toast(I18n.t('chat.feedback.copied'), 'info', 1200))
+          .catch((err) => UI.toast(I18n.t('chat.errors.copyFailed', { error: err.message }), 'err', 2500));
       } else if (action === 'regenerate') {
         _regenerateAssistantBubble(bubble);
       } else if (action === 'edit') {
@@ -1827,8 +1827,8 @@ const ChatView = (() => {
         ev.preventDefault();
         ev.stopPropagation();
         _copySessionKeyToClipboard()
-          .then(() => UI.toast('Session key copied', 'info', 1500))
-          .catch((err) => UI.toast('Copy failed: ' + err.message, 'err', 3000));
+          .then(() => UI.toast(I18n.t('chat.feedback.sessionKeyCopied'), 'info', 1500))
+          .catch((err) => UI.toast(I18n.t('chat.errors.copyFailed', { error: err.message }), 'err', 3000));
       });
     }
 
@@ -2351,7 +2351,7 @@ const ChatView = (() => {
       _viz.reset(); _resetSavingsPopupCooldown();
       _thread.innerHTML = _emptyStateHTML(); // safe: static string, no user data
       _subscribeSession();
-      UI.toast('New chat session in the current agent: ' + key, 'info');
+      UI.toast(I18n.t('chat.feedback.newSession', { key }), 'info');
     });
 
     // Export
@@ -2682,7 +2682,7 @@ const ChatView = (() => {
         _viz.reset(); _resetSavingsPopupCooldown();
         _thread.innerHTML = _emptyStateHTML(); // safe: static string, no user data
         _subscribeSession();
-        UI.toast('New chat session in the current agent: ' + key, 'info');
+        UI.toast(I18n.t('chat.feedback.newSession', { key }), 'info');
         break;
       }
       case 'reset_session':
@@ -2825,7 +2825,9 @@ const ChatView = (() => {
       }
       if (_isStreaming) _resetStreamIdleTimer();
     } catch (err) {
-      UI.toast('Session stream subscription failed: ' + (err?.message || err), 'err', 6000);
+      UI.toast(I18n.t('chat.errors.subscriptionFailed', {
+        error: err?.message || I18n.t('common.unknownError'),
+      }), 'err', 6000);
     }
   }
 
@@ -8578,13 +8580,18 @@ const ChatView = (() => {
 
   function _addAttachment(file) {
     const mime = _resolveAttachmentMime(file);
+    const name = file.name || I18n.t('chat.attachments.defaultName');
     if (!_isAllowedAttachmentMime(mime)) {
-      UI.toast(`Unsupported file: ${file.name || 'attachment'} (${mime}). Allowed: ${ATTACHMENT_ALLOWED_LABEL}`, 'warn', 4500);
+      UI.toast(I18n.t('chat.attachments.unsupported', {
+        name, mime, allowed: ATTACHMENT_ALLOWED_LABEL,
+      }), 'warn', 4500);
       return false;
     }
     const hardCap = _attachmentHardCapBytes(mime);
     if (file.size > hardCap) {
-      UI.toast(`File too large: ${file.name || 'attachment'} (max ${Math.round(hardCap / 1024 / 1024)} MB)`, 'warn');
+      UI.toast(I18n.t('chat.attachments.tooLarge', {
+        name, max: Math.round(hardCap / 1024 / 1024),
+      }), 'warn');
       return false;
     }
 
@@ -8621,7 +8628,7 @@ const ChatView = (() => {
       };
       reader.onerror = () => {
         _removeAttachmentByLocalId(localId);
-        UI.toast(`Could not read file: ${file.name || 'attachment'}`, 'warn');
+        UI.toast(I18n.t('chat.attachments.readFailed', { name }), 'warn');
       };
       reader.readAsDataURL(file);
       return true;
@@ -8629,7 +8636,10 @@ const ChatView = (() => {
 
     if (!_canStageAttachmentMime(mime)) {
       UI.toast(
-        `File too large: ${file.name || 'attachment'} (text-family attachments are limited to ${Math.round(ATTACHMENT_TEXT_HARD_CAP_BYTES / 1000 / 1000)} MB)`,
+        I18n.t('chat.attachments.textTooLarge', {
+          name,
+          max: Math.round(ATTACHMENT_TEXT_HARD_CAP_BYTES / 1000 / 1000),
+        }),
         'warn',
         4500,
       );
@@ -8646,7 +8656,10 @@ const ChatView = (() => {
     _renderAttachmentPreview();
     _uploadAttachmentStaged(file, mime, localId).catch((err) => {
       _removeAttachmentByLocalId(localId);
-      UI.toast(`Upload failed for ${file.name || 'attachment'}: ${err && err.message || err}`, 'warn', 4500);
+      UI.toast(I18n.t('chat.attachments.uploadFailed', {
+        name,
+        error: err && err.message || err,
+      }), 'warn', 4500);
     });
     return true;
   }
@@ -8698,11 +8711,11 @@ const ChatView = (() => {
 
   async function _startVoiceInputRecording() {
     if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-      UI.toast('Voice input requires HTTPS on public URLs.', 'warn', 4500);
+      UI.toast(I18n.t('chat.voice.httpsRequired'), 'warn', 4500);
       return;
     }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
-      UI.toast('Voice input is not available in this browser.', 'warn', 3500);
+      UI.toast(I18n.t('chat.voice.unavailable'), 'warn', 3500);
       return;
     }
     try {
@@ -8721,15 +8734,19 @@ const ChatView = (() => {
       });
       _mediaRecorder.addEventListener('stop', () => {
         _finishVoiceInputRecording().catch((err) => {
-          UI.toast(`Voice transcription failed: ${err && err.message || err}`, 'warn', 4500);
+          UI.toast(I18n.t('chat.voice.transcriptionFailed', {
+            error: err && err.message || err,
+          }), 'warn', 4500);
           _setVoiceInputState('idle');
         });
       }, { once: true });
       _mediaRecorder.start();
       _setVoiceInputState('recording');
-      UI.toast('Recording voice input...', 'info', 1600);
+      UI.toast(I18n.t('chat.voice.recording'), 'info', 1600);
     } catch (err) {
-      UI.toast(`Could not start voice input: ${err && err.message || err}`, 'warn', 4500);
+      UI.toast(I18n.t('chat.voice.startFailed', {
+        error: err && err.message || err,
+      }), 'warn', 4500);
       _stopVoiceInputTracks();
       _setVoiceInputState('idle');
     } finally {
@@ -8743,7 +8760,7 @@ const ChatView = (() => {
     _mediaRecorder = null;
     if (!_recordedAudioChunks.length) {
       _setVoiceInputState('idle');
-      UI.toast('No voice audio was recorded.', 'warn', 2500);
+      UI.toast(I18n.t('chat.voice.noAudio'), 'warn', 2500);
       return;
     }
     _setVoiceInputState('transcribing');
@@ -8752,11 +8769,11 @@ const ChatView = (() => {
       const blob = new Blob(_recordedAudioChunks, { type: mime });
       const text = await _transcribeVoiceInput(blob, mime);
       if (!text) {
-        UI.toast('Voice transcription returned no text.', 'warn', 3000);
+        UI.toast(I18n.t('chat.voice.noText'), 'warn', 3000);
         return;
       }
       _appendTranscribedText(text);
-      UI.toast('Voice input transcribed.', 'info', 2200);
+      UI.toast(I18n.t('chat.voice.transcribed'), 'info', 2200);
     } finally {
       _recordedAudioChunks = [];
       _voiceInputBusy = false;
@@ -8801,11 +8818,13 @@ const ChatView = (() => {
     _micBtn.classList.toggle('chat-mic-recording', recording);
     _micBtn.disabled = busy;
     _micBtn.title = recording
-      ? 'Stop recording'
+      ? I18n.t('chat.voice.stopTitle')
       : state === 'transcribing'
-        ? 'Transcribing voice input'
-        : 'Record voice input';
-    _micBtn.setAttribute('aria-label', recording ? 'Stop recording voice input' : 'Record voice input');
+        ? I18n.t('chat.voice.transcribing')
+        : I18n.t('chat.actions.recordVoice');
+    _micBtn.setAttribute('aria-label', recording
+      ? I18n.t('chat.voice.stop')
+      : I18n.t('chat.actions.recordVoice'));
   }
 
   function _stopVoiceInputTracks() {
@@ -8882,23 +8901,26 @@ const ChatView = (() => {
     _pendingAttachments.forEach((att, i) => {
       const isImage = (att.mime || '').startsWith('image/');
       const isBusy = att.kind === 'inline_pending' || att.kind === 'uploading';
-      const status = att.kind === 'inline_pending' ? 'Reading...' : att.kind === 'uploading' ? 'Uploading...' : '';
+      const status = att.kind === 'inline_pending'
+        ? I18n.t('chat.attachments.reading')
+        : att.kind === 'uploading' ? I18n.t('chat.attachments.uploading') : '';
+      const removeLabel = _escAttr(I18n.t('chat.attachments.remove', { name: att.name }));
       if (isImage && att.dataUrl) {
         html += `<div class="attachment-thumb">
           <img src="${att.dataUrl}" alt="${_esc(att.name)}">
-          <button class="attachment-remove" data-idx="${i}" aria-label="Remove attachment ${_esc(att.name)}">&times;</button>
+          <button class="attachment-remove" data-idx="${i}" aria-label="${removeLabel}">&times;</button>
           <span class="attachment-name">${_esc(att.name)}</span>
         </div>`;
       } else {
         const kb = att.size ? Math.max(1, Math.round(att.size / 1024)) + ' KB' : '';
-        const stagedTag = att.kind === 'staged' ? ' • staged' : '';
+        const stagedTag = att.kind === 'staged' ? ` - ${I18n.t('chat.attachments.staged')}` : '';
         const busyClass = isBusy ? ' attachment-chip--busy' : '';
         const meta = status || `${att.mime || ''} ${kb}${stagedTag}`;
         html += `<div class="attachment-chip${busyClass}" data-mime="${_esc(att.mime || '')}">
           <span class="attachment-chip__icon" aria-hidden="true">${isBusy ? '<span class="spinner attachment-chip__spinner"></span>' : 'file'}</span>
           <span class="attachment-chip__name">${_esc(att.name)}</span>
           <span class="attachment-chip__meta">${_esc(meta)}</span>
-          <button class="attachment-remove" data-idx="${i}" title="Remove" aria-label="Remove attachment ${_esc(att.name)}">&times;</button>
+          <button class="attachment-remove" data-idx="${i}" title="${_escAttr(I18n.t('chat.attachments.removeTitle'))}" aria-label="${removeLabel}">&times;</button>
         </div>`;
       }
     });
@@ -8915,11 +8937,11 @@ const ChatView = (() => {
 
   function _exportMarkdown() {
     if (_messages.length === 0) {
-      UI.toast('No messages to export', 'warn');
+      UI.toast(I18n.t('chat.export.noMessages'), 'warn');
       return;
     }
-    let md = `# Chat Export \u2014 ${_sessionKey}\n\n`;
-    md += `Exported: ${new Date().toISOString()}\n\n---\n\n`;
+    let md = `# ${I18n.t('chat.export.title')} \u2014 ${_sessionKey}\n\n`;
+    md += `${I18n.t('chat.export.exportedAt')}: ${new Date().toISOString()}\n\n---\n\n`;
     _messages.forEach((msg) => {
       const role = _displayRoleLabel(msg.role) || msg.role;
       const time = msg.ts ? ` _(${new Date(msg.ts).toLocaleString()})_` : '';
@@ -8932,7 +8954,7 @@ const ChatView = (() => {
     a.download = `chat-${_sessionKey}.md`;
     a.click();
     URL.revokeObjectURL(a.href);
-    UI.toast('Exported as Markdown', 'info');
+    UI.toast(I18n.t('chat.export.complete'), 'info');
   }
 
   function _artifactMarkdownLines(artifacts) {

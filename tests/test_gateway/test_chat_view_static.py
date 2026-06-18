@@ -25,6 +25,44 @@ def test_chat_user_facing_shell_uses_i18n() -> None:
         assert call in source
 
 
+def test_chat_composer_feedback_and_errors_use_i18n() -> None:
+    source = CHAT_JS.read_text(encoding="utf-8")
+    required_calls = [
+        "I18n.t('chat.composer.placeholder')",
+        "I18n.t('chat.actions.attachFiles'",
+        "I18n.t('chat.actions.newSession')",
+        "I18n.t('chat.actions.exportMarkdown')",
+        "I18n.t('chat.actions.send')",
+        "I18n.t('chat.actions.stop')",
+        "I18n.t('chat.permissions.prompts')",
+        "I18n.t('chat.feedback.newSession'",
+        "I18n.t('chat.errors.copyFailed'",
+        "I18n.t('chat.errors.subscriptionFailed'",
+    ]
+
+    for call in required_calls:
+        assert call in source
+
+
+def test_chat_attachment_voice_and_export_feedback_use_i18n() -> None:
+    source = CHAT_JS.read_text(encoding="utf-8")
+    required_calls = [
+        "I18n.t('chat.attachments.unsupported'",
+        "I18n.t('chat.attachments.tooLarge'",
+        "I18n.t('chat.attachments.readFailed'",
+        "I18n.t('chat.attachments.uploadFailed'",
+        "I18n.t('chat.attachments.remove'",
+        "I18n.t('chat.voice.unavailable')",
+        "I18n.t('chat.voice.recording')",
+        "I18n.t('chat.voice.transcriptionFailed'",
+        "I18n.t('chat.export.noMessages')",
+        "I18n.t('chat.export.complete')",
+    ]
+
+    for call in required_calls:
+        assert call in source
+
+
 def test_global_topbar_does_not_render_duplicate_chat_title() -> None:
     source = APP_JS.read_text(encoding="utf-8")
     topbar_start = source.index('<header class="topbar"')
