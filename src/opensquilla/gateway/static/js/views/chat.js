@@ -377,7 +377,27 @@ const ChatView = (() => {
   const _THINKING_DELAY_MS = 400;  // don't show for fast responses
   const _THINKING_TTL_MS = 60000;  // 60s auto-hide
   // kept in sync with stream.py WaitingIndicator._verbs
-  const SQUILLA_VERBS = ['Watching','Tracking','Sensing','Pulsing','Thinking','Drafting','Polishing'];
+  const SQUILLA_VERB_KEYS = [
+    'chat.streaming.watching',
+    'chat.streaming.tracking',
+    'chat.streaming.sensing',
+    'chat.streaming.pulsing',
+    'chat.streaming.thinking',
+    'chat.streaming.drafting',
+    'chat.streaming.polishing',
+  ];
+  function _thinkingVerb(key) {
+    const labels = {
+      'chat.streaming.watching': I18n.t('chat.streaming.watching'),
+      'chat.streaming.tracking': I18n.t('chat.streaming.tracking'),
+      'chat.streaming.sensing': I18n.t('chat.streaming.sensing'),
+      'chat.streaming.pulsing': I18n.t('chat.streaming.pulsing'),
+      'chat.streaming.thinking': I18n.t('chat.streaming.thinking'),
+      'chat.streaming.drafting': I18n.t('chat.streaming.drafting'),
+      'chat.streaming.polishing': I18n.t('chat.streaming.polishing'),
+    };
+    return labels[key] || labels['chat.streaming.thinking'];
+  }
   const SQUILLA_DWELL_MS = 2500;
 
   // Inline directive tags — control signals the LLM emits per system prompt
@@ -1387,7 +1407,9 @@ const ChatView = (() => {
           });
           _toolbarState.router = enabled;
           _refreshToolbarTriggerGlow();
-          UI.toast('Squilla Router: ' + (enabled ? 'ON' : 'OFF'), 'info');
+          UI.toast(I18n.t('chat.feedback.routerState', {
+            state: I18n.t(enabled ? 'chat.feedback.on' : 'chat.feedback.off'),
+          }), 'info');
         } catch (e) {
           // Revert on failure
           _routerFeatureEnabled = previousRouterFeatureEnabled;
@@ -1416,7 +1438,9 @@ const ChatView = (() => {
           _thread.querySelectorAll('.router-fx').forEach((n) => _routerFxRemoveStrip(n));
         }
         if (window.SavingsFX) window.SavingsFX.setEnabled(_routerFx.enabled);
-        UI.toast('Visual effects: ' + (_routerFx.enabled ? 'ON' : 'OFF'), 'info');
+        UI.toast(I18n.t('chat.feedback.visualEffectsState', {
+          state: I18n.t(_routerFx.enabled ? 'chat.feedback.on' : 'chat.feedback.off'),
+        }), 'info');
       });
     }
 
@@ -2279,7 +2303,7 @@ const ChatView = (() => {
         ApprovalMonitor.pollNow();
       }
     } catch (err) {
-      UI.toast('Failed to sync bypass mode: ' + err.message, 'err', 3500);
+      UI.toast(I18n.t('chat.permissions.syncFailed', { error: err.message }), 'err', 3500);
     }
   }
 
@@ -2288,7 +2312,7 @@ const ChatView = (() => {
     if (_elevatedUnavailable) {
       _elevatedPill.classList.remove('is-active');
       _elevatedPill.classList.add('chat-pill--disabled');
-      _elevatedPill.textContent = 'Bypass N/A';
+      _elevatedPill.textContent = I18n.t('chat.permissions.unavailable');
       _elevatedPill.title =
         'Bypass requires a local owner session. The gateway is bound to a non-loopback address, so this client cannot toggle elevated mode.';
       _elevatedPill.setAttribute('aria-disabled', 'true');
@@ -2703,7 +2727,7 @@ const ChatView = (() => {
             _clearContextStatus();
             _clearActiveTaskGroups();
             _thread.innerHTML = _emptyStateHTML();
-            UI.toast('Session reset', 'info');
+            UI.toast(I18n.t('chat.feedback.sessionReset'), 'info');
           })
           .catch((err) => UI.toast('Reset failed: ' + err.message, 'err'));
         break;
@@ -2737,7 +2761,7 @@ const ChatView = (() => {
       case 'usage.status':
       case '/usage': {
         if (args.trim().toLowerCase() === 'page') {
-          UI.toast('Usage page is available from the sidebar', 'info');
+          UI.toast(I18n.t('chat.commands.usageSidebar'), 'info');
           break;
         }
         const usageMethod = args.trim().toLowerCase() === 'cost' ? 'usage.cost' : 'usage.status';
@@ -2768,7 +2792,7 @@ const ChatView = (() => {
     const cmd = _slashCommandMap.get(_slashCommandKey(cmdText));
     if (!cmd) {
       _closeSlashMenu();
-      UI.toast('Unsupported command: ' + cmdText, 'warn', 2500);
+      UI.toast(I18n.t('chat.commands.unsupported', { command: cmdText }), 'warn', 2500);
       return true;
     }
     _selectSlashCmd(cmd, rest.join(' '));
@@ -2800,7 +2824,7 @@ const ChatView = (() => {
         }
         const replayGapReason = res.replay_gap_reason || res.replayGapReason || '';
         if (_replayGapShouldWarn(replayGapReason)) {
-          UI.toast('Missed live stream events; transcript refreshed.', 'warn', 5000);
+          UI.toast(I18n.t('chat.streaming.missedEvents'), 'warn', 5000);
         } else {
           _chatDiag('session.subscribe.replay_gap.history_refresh', {
             reason: replayGapReason,
@@ -3133,20 +3157,20 @@ const ChatView = (() => {
   ]);
 
   const _COMPACTION_SKIP_MESSAGES = {
-    coverage_blocked: 'Context was left unchanged because required details could not be preserved.',
-    empty_ephemeral_webchat_session: 'No compactable chat history yet.',
-    empty_summary: 'Context was left unchanged because no usable summary was produced.',
-    no_entries: 'No compactable chat history yet.',
-    no_safe_turn_boundary: 'Context cannot be compacted safely during the current tool turn.',
+    coverage_blocked: () => I18n.t('chat.compaction.coverageBlocked'),
+    empty_ephemeral_webchat_session: () => I18n.t('chat.compaction.noHistory'),
+    empty_summary: () => I18n.t('chat.compaction.noSummary'),
+    no_entries: () => I18n.t('chat.compaction.noHistory'),
+    no_safe_turn_boundary: () => I18n.t('chat.compaction.unsafeBoundary'),
   };
 
   const _COMPACTION_SKIP_DETAILS = {
-    coverage_blocked: 'Required details could not be preserved',
-    empty_ephemeral_webchat_session: 'No compactable history',
-    empty_summary: 'No usable summary was produced',
-    no_entries: 'No compactable history',
-    no_safe_turn_boundary: 'Current tool turn boundary is not safe to compact',
-    unsafe_flush_receipt: 'Memory safety check did not complete',
+    coverage_blocked: () => I18n.t('chat.compaction.coverageDetail'),
+    empty_ephemeral_webchat_session: () => I18n.t('chat.compaction.noHistoryDetail'),
+    empty_summary: () => I18n.t('chat.compaction.noSummaryDetail'),
+    no_entries: () => I18n.t('chat.compaction.noHistoryDetail'),
+    no_safe_turn_boundary: () => I18n.t('chat.compaction.unsafeBoundaryDetail'),
+    unsafe_flush_receipt: () => I18n.t('chat.compaction.memoryCheckDetail'),
   };
 
   function _compactionReason(payload) {
@@ -3168,7 +3192,8 @@ const ChatView = (() => {
   function _compactionSkipMessage(payload, source) {
     const reason = _compactionReason(payload);
     if (source === 'manual') {
-      return _COMPACTION_SKIP_MESSAGES[reason] || 'Already within context budget; no compact was applied.';
+      const message = _COMPACTION_SKIP_MESSAGES[reason];
+      return message ? message() : 'Already within context budget; no compact was applied.';
     }
     if (_COMPACTION_SKIP_MESSAGES[reason]) return 'Context compaction could not be applied';
     if (reason) return 'Context compaction skipped';
@@ -3180,7 +3205,7 @@ const ChatView = (() => {
     if (status === 'emergency_ephemeral') return 'Request-scoped; session history was not rewritten';
     const reason = _compactionReason(payload);
     if (_INTERNAL_COMPACTION_SKIP_REASONS.has(reason)) return '';
-    if (_COMPACTION_SKIP_DETAILS[reason]) return _COMPACTION_SKIP_DETAILS[reason];
+    if (_COMPACTION_SKIP_DETAILS[reason]) return _COMPACTION_SKIP_DETAILS[reason]();
     if (reason) return reason.replace(/_/g, ' ');
     return '';
   }
@@ -3235,7 +3260,7 @@ const ChatView = (() => {
     if (status === 'emergency_ephemeral') {
       _settleCompactInFlight(payload || {});
       if (!isReplay) {
-        UI.toast('Continuing with temporary context compaction for this turn', 'info', 4500);
+        UI.toast(I18n.t('chat.compaction.temporary'), 'info', 4500);
       }
       return;
     }
@@ -5114,7 +5139,7 @@ const ChatView = (() => {
     _unsubs.push(_rpc.on('_gap', () => {
       if (!_isStreaming) return;
       _clearStreamIdleTimer();
-      UI.toast('Stream connection gap detected; reconnecting.', 'warn', 4000);
+      UI.toast(I18n.t('chat.streaming.connectionGap'), 'warn', 4000);
     }));
   }
 
@@ -5316,20 +5341,20 @@ const ChatView = (() => {
 
     if (_historyLoadingEarlier) {
       tone = 'loading';
-      message = 'Loading earlier messages...';
+      message = I18n.t('chat.history.loadingEarlier');
     } else if (_historyError) {
       tone = 'error';
       message = _historyError;
       showRetry = true;
     } else if (_historyHasMore || _historyScope === 'latest_window') {
       tone = 'partial';
-      message = `Showing latest ${_historyLoadedMessages.length} messages.`;
-      detail = 'Older history is available.';
+      message = I18n.t('chat.history.showingLatest', { count: _historyLoadedMessages.length });
+      detail = I18n.t('chat.history.olderAvailable');
       showLoadEarlier = !!_historyOldestCursor;
     } else if (_historyScope === 'compacted' || _historyCompactionSummaries.length > 0) {
       tone = 'compacted';
-      message = 'Older context was compacted for the model.';
-      detail = 'Export the session for exact text.';
+      message = I18n.t('chat.history.compacted');
+      detail = I18n.t('chat.history.exportExact');
     } else {
       return;
     }
@@ -5347,7 +5372,7 @@ const ChatView = (() => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn btn--sm btn--ghost';
-      btn.textContent = 'Load earlier';
+      btn.textContent = I18n.t('chat.history.loadEarlier');
       btn.disabled = _historyLoadingEarlier;
       btn.addEventListener('click', () => _loadEarlierHistory());
       actions.appendChild(btn);
@@ -5356,7 +5381,9 @@ const ChatView = (() => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn btn--sm btn--ghost';
-      btn.textContent = _historyHasMore && _historyOldestCursor ? 'Retry' : 'Retry history';
+      btn.textContent = I18n.t(
+        _historyHasMore && _historyOldestCursor ? 'chat.history.retry' : 'chat.history.retryHistory'
+      );
       btn.addEventListener('click', () => {
         if (_historyHasMore && _historyOldestCursor) {
           _loadEarlierHistory();
@@ -6073,7 +6100,7 @@ const ChatView = (() => {
     let isLiteralSlash = false;
 
     if (_hasPendingAttachmentWork()) {
-      UI.toast('Wait for file attachment processing to finish', 'warn', 2500);
+      UI.toast(I18n.t('chat.attachments.waitForProcessing'), 'warn', 2500);
       return;
     }
 
@@ -6463,7 +6490,10 @@ const ChatView = (() => {
     elapsed.setAttribute('aria-live', 'off');
     const elapsedMs = Date.now() - _thinkingStartTime;
     const seconds = Math.floor(elapsedMs / 1000);
-    const verb = SQUILLA_VERBS[Math.floor(elapsedMs / SQUILLA_DWELL_MS) % SQUILLA_VERBS.length];
+    const verbKey = SQUILLA_VERB_KEYS[
+      Math.floor(elapsedMs / SQUILLA_DWELL_MS) % SQUILLA_VERB_KEYS.length
+    ];
+    const verb = _thinkingVerb(verbKey);
     elapsed.textContent = `${verb} (${seconds}s)`;
 
     status.appendChild(dots);
@@ -6480,13 +6510,16 @@ const ChatView = (() => {
       if (!_thinkingEl) { clearInterval(_thinkingTimerInterval); return; }
       const eMs = Date.now() - _thinkingStartTime;
       const s = Math.floor(eMs / 1000);
-      const v = SQUILLA_VERBS[Math.floor(eMs / SQUILLA_DWELL_MS) % SQUILLA_VERBS.length];
+      const key = SQUILLA_VERB_KEYS[
+        Math.floor(eMs / SQUILLA_DWELL_MS) % SQUILLA_VERB_KEYS.length
+      ];
+      const v = _thinkingVerb(key);
       const label = _thinkingEl.querySelector('.thinking-elapsed');
       if (label) label.textContent = `${v} (${s}s)`;
 
       if (s >= _THINKING_TTL_MS / 1000) {
         _hideThinkingIndicator();
-        _addMessage('system', 'Still waiting for agent response\u2026');
+        _addMessage('system', I18n.t('chat.streaming.stillWaiting'));
       }
     }, 1000);
   }
@@ -6805,7 +6838,7 @@ const ChatView = (() => {
       if (wasAborted && body && !body.querySelector('.msg-interrupt-mark')) {
         const mark = document.createElement('span');
         mark.className = 'msg-interrupt-mark';
-        mark.textContent = 'interrupted';
+        mark.textContent = I18n.t('chat.streaming.interrupted');
         body.appendChild(mark);
       }
 
@@ -7122,7 +7155,7 @@ const ChatView = (() => {
   }
 
   function _visibleToolSummaryStatus(status) {
-    return status === 'running' ? 'running' : '';
+    return status === 'running' ? I18n.t('chat.tools.running') : '';
   }
 
   function _applyToolSummaryStatus(statusSpan, status) {
@@ -7320,7 +7353,7 @@ const ChatView = (() => {
       const viewBtn = document.createElement('button');
       viewBtn.className = 'btn btn--sm btn--ghost chat-tool-view-btn';
       viewBtn.type = 'button';
-      viewBtn.textContent = 'View full';
+      viewBtn.textContent = I18n.t('chat.artifacts.viewFull');
       viewBtn.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -8144,7 +8177,7 @@ const ChatView = (() => {
       const meta = [mime, size].filter(Boolean).join(' · ');
       if (_isImageArtifact(artifact)) {
         const previewUrl = _artifactPreviewUrl(artifact || {});
-        html += `<a class="msg-artifact-card msg-artifact-card--image" href="${_escAttr(downloadHref)}" download="${_escAttr(name)}" data-artifact-category="${_escAttr(category)}" data-artifact-download="${_escAttr(downloadUrl)}" data-artifact-id="${_escAttr(artifact?.id || '')}" data-artifact-name="${_escAttr(name)}" title="Download ${_escAttr(name)}">
+        html += `<a class="msg-artifact-card msg-artifact-card--image" href="${_escAttr(downloadHref)}" download="${_escAttr(name)}" data-artifact-category="${_escAttr(category)}" data-artifact-download="${_escAttr(downloadUrl)}" data-artifact-id="${_escAttr(artifact?.id || '')}" data-artifact-name="${_escAttr(name)}" title="${_escAttr(I18n.t('chat.artifacts.download', { name }))}">
           ${previewUrl ? `<img class="msg-artifact-preview" src="${_esc(previewUrl)}" alt="${_esc(name)}" loading="lazy">` : '<span class="msg-artifact-preview msg-artifact-preview--empty" aria-hidden="true"></span>'}
           <span class="msg-artifact-card__body">
             <span class="msg-artifact-card__name">${_esc(name)}</span>
@@ -8305,13 +8338,15 @@ const ChatView = (() => {
     let bodyEl;
     try {
       const parsed = JSON.parse(text);
-      summary.textContent = 'Subagent: ' + (parsed.child_session_key || parsed.session_key || 'completion');
+      summary.textContent = I18n.t('chat.subagents.label', {
+        session: parsed.child_session_key || parsed.session_key || 'completion',
+      });
       const pre = document.createElement('pre');
       pre.className = 'chat-subagent-disclosure-body';
       pre.textContent = JSON.stringify(parsed, null, 2);
       bodyEl = pre;
     } catch (_) {
-      summary.textContent = 'Subagent completion';
+      summary.textContent = I18n.t('chat.subagents.completion');
       const pre = document.createElement('pre');
       pre.className = 'chat-subagent-disclosure-body chat-subagent-disclosure-body--raw';
       pre.textContent = text;
@@ -8564,7 +8599,7 @@ const ChatView = (() => {
     const message = kind === 'page_dump'
       ? 'Please process the attached WebChat page dump.'
       : 'Please process the attached pasted text.';
-    UI.toast('Large pasted text was attached as a .txt file.', 'info', 2500);
+    UI.toast(I18n.t('chat.feedback.largePasteAttached'), 'info', 2500);
     return {
       text: message,
       displayText: message,
@@ -9030,21 +9065,21 @@ const ChatView = (() => {
     _pendingArea.classList.remove('hidden');
     const showClearAll = _pendingQueue.length >= 2;
     let html = `<div class="chat-pending-header">`
-      + `<span class="chat-pending-label" title="Alt+↑ pulls the most recent back into the input · ESC recovers all to input · sends FIFO when the current response finishes">Pending ${_pendingQueue.length}/${_MAX_PENDING}</span>`;
+      + `<span class="chat-pending-label" title="${_escAttr(I18n.t('chat.pending.help'))}">${_esc(I18n.t('chat.pending.label', { count: _pendingQueue.length, max: _MAX_PENDING }))}</span>`;
     if (showClearAll) {
-      html += `<button class="chat-pending-clear" data-action="clear-all" aria-label="Clear all pending messages">Clear all</button>`;
+      html += `<button class="chat-pending-clear" data-action="clear-all" aria-label="${_escAttr(I18n.t('chat.pending.clearAllAria'))}">${_esc(I18n.t('chat.pending.clearAll'))}</button>`;
     }
     html += `</div><div class="chat-pending-chips">`;
     _pendingQueue.forEach((p, i) => {
-      const raw = p.text || (p.attachments && p.attachments.length ? '(attachment only)' : '');
+      const raw = p.text || (p.attachments && p.attachments.length ? I18n.t('chat.pending.attachmentOnly') : '');
       const preview = _esc(raw.slice(0, 30)) + (raw.length > 30 ? '…' : '');
       const attChip = p.attachments && p.attachments.length > 0
         ? ` <span class="chat-pending-attch">📎${p.attachments.length}</span>` : '';
-      const chipLabel = _esc(`Pending message ${i + 1}: ${raw.slice(0, 80)}`);
+      const chipLabel = I18n.t('chat.pending.itemLabel', { index: i + 1, text: raw.slice(0, 80) });
       html += `<span class="chat-pending-chip" data-idx="${i}" title="${_esc(raw)}">`
         + `<span class="chat-pending-text">${preview}</span>${attChip}`
         + `<button class="chat-pending-chip-remove" data-idx="${i}"`
-        + ` aria-label="Remove ${chipLabel}" title="Remove">&times;</button>`
+        + ` aria-label="${_escAttr(I18n.t('chat.pending.remove', { label: chipLabel }))}" title="${_escAttr(I18n.t('chat.pending.removeTitle'))}">&times;</button>`
         + `</span>`;
     });
     html += `</div>`;

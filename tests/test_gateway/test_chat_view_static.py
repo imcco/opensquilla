@@ -63,6 +63,37 @@ def test_chat_attachment_voice_and_export_feedback_use_i18n() -> None:
         assert call in source
 
 
+def test_chat_dynamic_states_use_i18n_without_translating_protocol_values() -> None:
+    source = CHAT_JS.read_text(encoding="utf-8")
+    for call in [
+        "I18n.t('chat.streaming.thinking')",
+        "I18n.t('chat.compaction.noHistory')",
+        "I18n.t('chat.compaction.noSummary')",
+        "I18n.t('chat.history.loadEarlier')",
+        "I18n.t('chat.tools.running')",
+    ]:
+        assert call in source
+
+    assert "run_status: 'idle'" in source
+    assert "event.startsWith('session.event.')" in source
+
+
+def test_chat_secondary_feedback_and_queue_controls_use_i18n() -> None:
+    source = CHAT_JS.read_text(encoding="utf-8")
+    for call in [
+        "I18n.t('chat.feedback.routerState'",
+        "I18n.t('chat.permissions.syncFailed'",
+        "I18n.t('chat.feedback.sessionReset')",
+        "I18n.t('chat.commands.unsupported'",
+        "I18n.t('chat.streaming.connectionGap')",
+        "I18n.t('chat.artifacts.viewFull')",
+        "I18n.t('chat.subagents.completion')",
+        "I18n.t('chat.pending.label'",
+        "I18n.t('chat.pending.clearAll')",
+    ]:
+        assert call in source
+
+
 def test_global_topbar_does_not_render_duplicate_chat_title() -> None:
     source = APP_JS.read_text(encoding="utf-8")
     topbar_start = source.index('<header class="topbar"')
@@ -750,8 +781,8 @@ def test_chat_new_session_uses_current_agent_namespace() -> None:
 
     assert "function _agentIdFromSessionKey(key)" in source
     assert "return _webchatSessionKey(_agentIdFromSessionKey(_sessionKey)," in source
-    assert 'title="New chat session in the current agent"' in source
-    assert "New chat session in the current agent: " in source
+    assert "I18n.t('chat.actions.newSession')" in source
+    assert "I18n.t('chat.feedback.newSession', { key })" in source
     assert "_loadHistory(" not in click_body
     assert "_loadHistory(" not in slash_body
 
@@ -830,7 +861,7 @@ def test_chat_slash_executor_handles_unknown_without_chat_send() -> None:
     executor = source[exec_start:exec_end]
 
     assert "_slashCommandMap.get(_slashCommandKey(cmdText))" in executor
-    assert "Unsupported command" in executor
+    assert "I18n.t('chat.commands.unsupported'" in executor
     assert "return true;" in executor
     assert "chat.send" not in executor
 
@@ -1026,7 +1057,7 @@ def test_chat_error_event_refreshes_from_persisted_transcript() -> None:
 def test_chat_subscribe_failure_is_visible() -> None:
     source = CHAT_JS.read_text(encoding="utf-8")
 
-    assert "Session stream subscription failed:" in source
+    assert "I18n.t('chat.errors.subscriptionFailed'" in source
     assert "No subscription manager available" in source
 
 
@@ -1376,8 +1407,8 @@ def test_chat_surfaces_compaction_lifecycle_status_and_exception_toasts() -> Non
     assert "_compactionStatusLabel(payload || {}, source, status)" in source
     assert "Already within context budget; no compact was applied." in source
     assert "Context compaction could not be applied" in source
-    assert "No compactable chat history yet." in source
-    assert "Context was left unchanged because no usable summary was produced." in source
+    assert "I18n.t('chat.compaction.noHistory')" in source
+    assert "I18n.t('chat.compaction.noSummary')" in source
     assert "if (compactKey !== _sessionKey) return;" in compact_block
     assert (
         "_showCompactionToast({ ...(result || {}), key: compactKey, source: 'manual'"
@@ -1385,8 +1416,8 @@ def test_chat_surfaces_compaction_lifecycle_status_and_exception_toasts() -> Non
     )
     assert "session.event.compaction" in source
     assert "Context compacted older messages to keep this session within budget" not in source
-    assert "Continuing with temporary context compaction" in source
-    assert "Continuing with temporary context compaction for this turn" in body
+    assert "I18n.t('chat.compaction.temporary')" in source
+    assert "I18n.t('chat.compaction.temporary')" in body
     assert "Compact cancelled" in source
     assert "function _compactionUserVisible(payload, source, status)" in source
     assert "!_compactionUserVisible(payload || {}, source, status)" in source
@@ -1423,7 +1454,7 @@ def test_chat_compaction_uses_single_in_thread_separator_surface() -> None:
     assert "function _compactionSkipMessage(payload, source)" in source
     assert "if (_INTERNAL_COMPACTION_SKIP_REASONS.has(reason)) return '';" in source
     assert "Request-scoped; session history was not rewritten" in source
-    assert "No usable summary was produced" in source
+    assert "I18n.t('chat.compaction.noSummary')" in source
     assert "status === 'emergency_ephemeral'" in body
     assert "status === 'observed'" in body
 
@@ -1703,7 +1734,7 @@ def test_chat_clears_background_task_groups_on_state_reset_paths() -> None:
     destroy_idx = source.index("function destroy()")
 
     assert source.index("_clearActiveTaskGroups();", reset_idx) < source.index(
-        "UI.toast('Session reset'",
+        "I18n.t('chat.feedback.sessionReset')",
         reset_idx,
     )
     assert source.index("_clearActiveTaskGroups();", epoch_idx) < source.index(
@@ -1911,12 +1942,13 @@ def test_chat_history_scope_row_surfaces_partial_compacted_and_error_states() ->
     body = source[start:end]
 
     assert "chat-history-scope" in body
-    assert "Showing latest ${_historyLoadedMessages.length} messages." in body
-    assert "Older history is available." in body
-    assert "Older context was compacted for the model." in body
-    assert "Export the session for exact text." in body
-    assert "Load earlier" in body
-    assert "Retry history" in body
+    assert "I18n.t('chat.history.showingLatest'" in body
+    assert "I18n.t('chat.history.olderAvailable')" in body
+    assert "I18n.t('chat.history.compacted')" in body
+    assert "I18n.t('chat.history.exportExact')" in body
+    assert "I18n.t('chat.history.loadEarlier')" in body
+    assert "'chat.history.retry'" in body
+    assert "'chat.history.retryHistory'" in body
     assert "btn.addEventListener('click', () => _loadEarlierHistory());" in body
     assert ".chat-history-scope--partial" in css
     assert ".chat-history-scope--compacted" in css
@@ -2174,8 +2206,9 @@ def test_router_fx_watching_indicator_deferred_until_panel_settles() -> None:
     body = source[now_start:now_end]
     assert "_thread.querySelector('.router-fx[data-scanning=\"true\"]')" in body
     assert "_thinkingDelayTimer = setTimeout(_showThinkingIndicatorNow, 150);" in body
-    # The verb list (incl. "Watching") is unchanged.
-    assert "const SQUILLA_VERBS = ['Watching'," in source
+    # The activity cycle is localized without changing its timing behavior.
+    assert "const SQUILLA_VERB_KEYS = [" in source
+    assert "I18n.t('chat.streaming.watching')" in source
 
 
 def test_router_fx_scan_to_lock_fills_the_wait() -> None:
@@ -2514,7 +2547,7 @@ def test_tool_summary_exposes_visible_running_status() -> None:
     source = CHAT_JS.read_text(encoding="utf-8")
     assert "function _setToolSummaryStatus(details, status)" in source
     assert "function _visibleToolSummaryStatus(status)" in source
-    assert "return status === 'running' ? 'running' : '';" in source
+    assert "return status === 'running' ? I18n.t('chat.tools.running') : '';" in source
     build_start = source.index("function _buildToolCallDOM(")
     build_end = source.index("function _retitleToolCallDOM", build_start)
     build_body = source[build_start:build_end]
@@ -2675,7 +2708,7 @@ def test_router_fx_visualisation_pref_is_client_side_localstorage() -> None:
     assert "config.patch.safe" not in fx_body
     assert "_scheduleHistorySync();" in fx_body
     assert "if (window.SavingsFX) window.SavingsFX.setEnabled(_routerFx.enabled);" in fx_body
-    assert "UI.toast('Visual effects: '" in fx_body
+    assert "I18n.t('chat.feedback.visualEffectsState'" in fx_body
 
 
 def test_router_effects_default_on_and_cloud_choice_hidden() -> None:
@@ -2694,7 +2727,7 @@ def test_router_effects_default_on_and_cloud_choice_hidden() -> None:
     assert 'id="toggle-savings-fx"' not in chat_source
     assert "Savings FX" not in chat_source
     assert "Visual effects" in chat_source
-    assert "Show router and savings effects" in chat_source
+    assert "I18n.t('chat.composer.visualEffectsTitle')" in chat_source
     assert "Router effects" not in chat_source
     assert "Router animation" not in chat_source
     assert "Cloud view" not in chat_source
@@ -2811,8 +2844,8 @@ def test_router_fx_visualisation_toggle_markup_reuses_switch() -> None:
     popover = source[popover_start:popover_end]
 
     assert 'id="toggle-router-fx"' in popover
-    assert "Visual effects" in popover
-    assert "Show router and savings effects" in popover
+    assert "I18n.t('chat.composer.visualEffects')" in popover
+    assert "I18n.t('chat.composer.visualEffectsTitle')" in popover
     assert "Router effects" not in popover
     assert 'id="toggle-savings-fx"' not in popover
     assert "Savings FX" not in popover
@@ -2937,7 +2970,7 @@ def test_chat_approval_pending_has_distinct_run_status() -> None:
     approval_end = source.index("  function _resetStreamIdleTimer()", approval_start)
     approval_body = source[approval_start:approval_end]
 
-    assert "approval_pending: 'Waiting for approval'" in source
+    assert "approval_pending: I18n.t('chat.status.waitingApproval')" in source
     assert "approval_pending: 'chip-warn'" in source
     assert "_approvalPendingForCurrentSession" in source
     assert "run_status: 'approval_pending'" in approval_body

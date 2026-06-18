@@ -73,7 +73,7 @@ def test_chat_input_accept_attribute_matches_allowlist() -> None:
 def test_chat_permission_pill_distinguishes_global_and_session_modes() -> None:
     source = _read_chat_js()
 
-    assert '<span class="chat-toolbar-row-label">Execution mode</span>' in source
+    assert "I18n.t('chat.composer.executionMode')" in source
     assert '<span class="chat-toolbar-row-label">Approvals</span>' not in source
     assert "cfg?.permissions?.default_mode" in source
     assert "Global ${_globalElevatedMode.toUpperCase()}" in source
@@ -200,7 +200,7 @@ def test_chat_composer_has_microphone_transcription_flow() -> None:
     css = _read_chat_css()
 
     assert 'id="chat-btn-mic"' in source
-    assert 'aria-label="Record voice input"' in source
+    assert "I18n.t('chat.actions.recordVoice')" in source
     assert "navigator.mediaDevices.getUserMedia" in source
     assert "new MediaRecorder" in source
     assert "/api/audio/transcribe" in source
@@ -357,7 +357,7 @@ def test_chat_attachment_selection_has_pending_states_and_send_guard() -> None:
     assert "'uploading'" in source
     assert "reader.onerror" in source
     assert "_hasPendingAttachmentWork()" in source
-    assert "Wait for file attachment processing to finish" in source
+    assert "I18n.t('chat.attachments.waitForProcessing')" in source
     assert "attachment-chip--busy" in source
     assert ".attachment-chip--busy" in css
     assert ".msg-file-chip" in css
@@ -399,7 +399,7 @@ def test_chat_attachment_hard_cap_is_category_specific() -> None:
     assert "_isImageAttachmentMime(mime)" in source
     assert "_isTextAttachmentMime(mime)" in source
     assert "!_canStageAttachmentMime(mime)" in source
-    assert "text-family attachments are limited" in source
+    assert "I18n.t('chat.attachments.textTooLarge'" in source
     assert "ATTACHMENT_NON_PDF_HARD_CAP_BYTES" not in source
     assert "ATTACHMENT_HARD_CAP_BYTES" not in source
 
